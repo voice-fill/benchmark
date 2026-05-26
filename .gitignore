@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/**/*.mp3
+data/**/*.wav
+data/**/*.m4a
+data/**/*.flac
+data/**/*.ogg
+data/**/*.webm
+results/benchmark.db
+.env
