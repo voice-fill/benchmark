@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeWer } from '../src/wer.js';
+import { computeWer } from '../src/metrics/wer.js';
 
 describe('computeWer', () => {
   it('returns 0 for identical texts', () => {

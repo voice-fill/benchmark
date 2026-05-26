@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateCost, COST_PER_MINUTE } from '../src/cost.js';
+import { calculateCost, COST_PER_MINUTE } from '../src/metrics/cost.js';
 
 describe('COST_PER_MINUTE', () => {
   it('has entries for all expected providers', () => {

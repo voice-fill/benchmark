@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeText } from '../src/normalize.js';
+import { normalizeText } from '../src/metrics/normalize.js';
 
 describe('normalizeText', () => {
   it('lowercases text', () => {
