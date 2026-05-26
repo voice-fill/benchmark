@@ -12,21 +12,23 @@
     "dashboard": "tsx src/dashboard.ts"
   },
   "dependencies": {
+    "@ai-sdk/assemblyai": "latest",
+    "@ai-sdk/deepgram": "latest",
+    "@ai-sdk/openai": "latest",
+    "@soniox/vercel-ai-sdk-provider": "latest",
     "@voicefill/core": "file:../voice-fill",
     "ai": "^6.0.180",
-    "@ai-sdk/openai": "latest",
-    "@ai-sdk/deepgram": "latest",
-    "@ai-sdk/assemblyai": "latest",
-    "@soniox/vercel-ai-sdk-provider": "latest",
     "better-sqlite3": "latest",
     "commander": "latest",
-    "dotenv": "latest"
+    "dotenv": "latest",
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "latest",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.7.0",
-    "typescript": "^5.7.0",
     "tsx": "latest",
+    "typescript": "^5.7.0",
     "vitest": "^3.1.0"
   }
 }

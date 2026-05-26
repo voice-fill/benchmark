@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slovenian ASR Benchmark</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 1280px; margin: 0 auto; padding: 2rem; background: #f8f9fa; color: #1a1a1a; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; font-size: 0.95rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #333; }
+    .card.full { grid-column: 1 / -1; }
+    canvas { width: 100% !important; max-height: 350px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { background: #f1f3f5; font-weight: 600; cursor: pointer; user-select: none; }
+    th:hover { background: #e9ecef; }
+    tr:hover td { background: #f8f9fa; }
+    .best { color: #1a7f37; font-weight: 600; }
+    .loading { text-align: center; padding: 3rem; color: #999; }
+    .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; flex-wrap: wrap; }
+    .filters select { padding: 0.4rem 0.8rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; background: white; }
+    .filters label { font-size: 0.9rem; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Slovenian ASR Benchmark</h1>
+  <p class="subtitle" id="subtitle">Loading...</p>
+
+  <div class="filters">
+    <label>Run: <select id="runFilter"><option value="">All runs</option></select></label>
+    <label>Provider: <select id="providerFilter"><option value="">All providers</option></select></label>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>WER by Provider</h2>
+      <canvas id="werChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Latency by Provider</h2>
+      <canvas id="latencyChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Cost vs WER</h2>
+      <canvas id="scatterChart"></canvas>
+    </div>
+    <div class="card">
+      <h2>WER by Dialect</h2>
+      <canvas id="dialectChart"></canvas>
+    </div>
+    <div class="card full">
+      <h2>Summary</h2>
+      <table id="summaryTable">
+        <thead>
+          <tr>
+            <th data-sort="provider">Provider</th>
+            <th data-sort="meanWer">Mean WER</th>
+            <th data-sort="stdWer">Std WER</th>
+            <th data-sort="meanLatency">Latency (ms)</th>
+            <th data-sort="stdLatency">Std Latency</th>
+            <th data-sort="meanCost">Cost (USD)</th>
+            <th data-sort="count">Samples</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const COLORS = ['#4285f4','#ea4335','#fbbc04','#34a853','#ff6d01','#46bdc6','#7baaf7','#f07b72'];
+    let charts = {};
+
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      return res.json();
+    }
+
+    async function loadFilters() {
+      const [runIds, stats] = await Promise.all([
+        fetchJson('/api/runs/list'),
+        fetchJson('/api/stats'),
+      ]);
+
+      const runSelect = document.getElementById('runFilter');
+      for (const r of runIds) {
+        const opt = document.createElement('option');
+        opt.value = r.run_id;
+        opt.textContent = `${r.created_at.slice(0, 16)} (${r.count} results)`;
+        runSelect.appendChild(opt);
+      }
+
+      const provSelect = document.getElementById('providerFilter');
+      for (const s of stats) {
+        const opt = document.createElement('option');
+        opt.value = s.provider;
+        opt.textContent = s.provider;
+        provSelect.appendChild(opt);
+      }
+
+      runSelect.addEventListener('change', render);
+      provSelect.addEventListener('change', render);
+    }
+
+    function destroyCharts() {
+      for (const c of Object.values(charts)) c.destroy();
+      charts = {};
+    }
+
+    async function render() {
+      const runId = document.getElementById('runFilter').value;
+      const provider = document.getElementById('providerFilter').value;
+
+      const params = new URLSearchParams();
+      if (runId) params.set('runId', runId);
+      if (provider) params.set('provider', provider);
+      const qs = params.toString() ? '?' + params.toString() : '';
+
+      const [stats, dialects, runs] = await Promise.all([
+        fetchJson('/api/stats' + qs),
+        fetchJson('/api/stats/dialects' + qs),
+        fetchJson('/api/runs' + qs),
+      ]);
+
+      document.getElementById('subtitle').textContent =
+        `${runs.length} transcriptions across ${stats.length} provider(s)`;
+
+      destroyCharts();
+
+      const providers = stats.map(s => s.provider);
+      const meanWers = stats.map(s => +(s.meanWer * 100).toFixed(2));
+      const meanLatencies = stats.map(s => Math.round(s.meanLatency));
+      const costs = stats.map(s => +s.meanCost.toFixed(5));
+
+      // WER bar chart
+      charts.wer = new Chart(document.getElementById('werChart'), {
+        type: 'bar',
+        data: {
+          labels: providers,
+          datasets: [{ label: 'WER %', data: meanWers, backgroundColor: COLORS }],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, title: { display: true, text: 'WER (%)' } } },
+        },
+      });
+
+      // Latency bar chart
+      charts.latency = new Chart(document.getElementById('latencyChart'), {
+        type: 'bar',
+        data: {
+          labels: providers,
+          datasets: [{
+            label: 'Latency (ms)',
+            data: meanLatencies,
+            backgroundColor: COLORS,
+          }],
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, title: { display: true, text: 'Latency (ms)' } } },
+        },
+      });
+
+      // Cost vs WER scatter
+      charts.scatter = new Chart(document.getElementById('scatterChart'), {
+        type: 'scatter',
+        data: {
+          datasets: providers.map((p, i) => ({
+            label: p,
+            data: [{ x: costs[i], y: meanWers[i] }],
+            backgroundColor: COLORS[i % COLORS.length],
+            pointRadius: 8,
+          })),
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Cost per transcription (USD)' } },
+            y: { title: { display: true, text: 'WER (%)' }, beginAtZero: true },
+          },
+        },
+      });
+
+      // Dialect grouped bar chart
+      const allDialects = [...new Set(dialects.map(d => d.dialect))].sort();
+      charts.dialect = new Chart(document.getElementById('dialectChart'), {
+        type: 'bar',
+        data: {
+          labels: providers,
+          datasets: allDialects.map((dialect, i) => ({
+            label: dialect,
+            data: providers.map(p => {
+              const entry = dialects.find(d => d.provider === p && d.dialect === dialect);
+              return entry ? +(entry.meanWer * 100).toFixed(2) : 0;
+            }),
+            backgroundColor: COLORS[i % COLORS.length],
+          })),
+        },
+        options: {
+          scales: { y: { beginAtZero: true, title: { display: true, text: 'WER (%)' } } },
+        },
+      });
+
+      // Summary table
+      const tbody = document.querySelector('#summaryTable tbody');
+      tbody.innerHTML = stats.map((s, i) => `
+        <tr>
+          <td${i === 0 ? ' class="best"' : ''}>${s.provider}</td>
+          <td${i === 0 ? ' class="best"' : ''}>${(s.meanWer * 100).toFixed(1)}%</td>
+          <td>${(s.stdWer * 100).toFixed(1)}%</td>
+          <td>${Math.round(s.meanLatency)}</td>
+          <td>${Math.round(s.stdLatency)}</td>
+          <td>$${s.meanCost.toFixed(5)}</td>
+          <td>${s.count}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Table sorting
+    document.querySelector('#summaryTable thead').addEventListener('click', (e) => {
+      const th = e.target.closest('th');
+      if (!th || !th.dataset.sort) return;
+      const key = th.dataset.sort;
+      const tbody = document.querySelector('#summaryTable tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const idx = Array.from(th.parentNode.children).indexOf(th);
+      const asc = th.classList.toggle('asc');
+
+      rows.sort((a, b) => {
+        const av = a.children[idx].textContent.replace(/[$%]/g, '');
+        const bv = b.children[idx].textContent.replace(/[$%]/g, '');
+        const an = parseFloat(av), bn = parseFloat(bv);
+        if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+
+      for (const row of rows) tbody.appendChild(row);
+    });
+
+    loadFilters().then(render);
+  </script>
+</body>
+</html>
