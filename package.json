@@ -9,7 +9,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "benchmark": "tsx src/cli.ts run",
-    "dashboard": "tsx src/cli.ts dashboard"
+    "dashboard": "tsx src/dashboard.ts"
   },
   "dependencies": {
     "@voicefill/core": "file:../voice-fill",

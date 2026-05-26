@@ -5,7 +5,6 @@ import path from 'node:path';
 import { createDb } from './db.js';
 import { getProvider, listProviders } from './providers/index.js';
 import { runBenchmark, type AudioFile } from './runner.js';
-import { generateDashboard } from './dashboard.js';
 
 const DB_PATH = path.resolve('results/benchmark.db');
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.webm']);
@@ -82,20 +81,6 @@ program
         language: opts.language,
       });
       console.log(`\nDone! ${results.length} result(s) saved to ${DB_PATH}`);
-    } finally {
-      db.close();
-    }
-  });
-
-program
-  .command('dashboard')
-  .description('Generate HTML dashboard from results')
-  .option('-o, --output <path>', 'Output HTML path', 'results/dashboard.html')
-  .action(async (opts) => {
-    const db = createDb(DB_PATH);
-    try {
-      await generateDashboard(db, opts.output);
-      console.log(`Dashboard written to ${opts.output}`);
     } finally {
       db.close();
     }
