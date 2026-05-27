@@ -4,80 +4,431 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Slovenian ASR Benchmark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --border-light: #f0f1f3;
+      --text: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --green: #059669;
+      --green-light: #ecfdf5;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --orange: #d97706;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.06);
+      --chart-1: #4f46e5;
+      --chart-2: #0891b2;
+      --chart-3: #059669;
+      --chart-4: #d97706;
+      --chart-5: #dc2626;
+      --chart-6: #7c3aed;
+      --chart-7: #db2777;
+      --chart-8: #0d9488;
+      --transition: 200ms ease;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; max-width: 1280px; margin: 0 auto; padding: 2rem; background: #f8f9fa; color: #1a1a1a; }
-    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
-    .subtitle { color: #666; margin-bottom: 2rem; font-size: 0.95rem; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-    .card { background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-    .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #333; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 2rem 2rem 4rem;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      font-size: 1.625rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .header .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+    .header .subtitle span {
+      display: inline-block;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      margin-left: 0.25rem;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .filter-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .filter-group select {
+      padding: 0.5rem 2rem 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .filter-group select:has(option:checked:not([value=""])) {
+      border-color: var(--accent);
+      background-color: var(--accent-light);
+    }
+    .btn-clear {
+      padding: 0.5rem 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-family: inherit;
+      font-weight: 500;
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+      display: none;
+    }
+    .btn-clear:hover { background: var(--bg); color: var(--text); }
+    .btn-clear.visible { display: inline-flex; }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+      transition: box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover { box-shadow: var(--shadow-md); }
     .card.full { grid-column: 1 / -1; }
-    canvas { width: 100% !important; max-height: 350px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    th { background: #f1f3f5; font-weight: 600; cursor: pointer; user-select: none; }
-    th:hover { background: #e9ecef; }
-    tr:hover td { background: #f8f9fa; }
-    .best { color: #1a7f37; font-weight: 600; }
-    .loading { text-align: center; padding: 3rem; color: #999; }
-    .filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; flex-wrap: wrap; }
-    .filters select { padding: 0.4rem 0.8rem; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; background: white; }
-    .filters label { font-size: 0.9rem; color: #555; }
+    .card h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 1.25rem;
+    }
+    canvas { width: 100% !important; max-height: 320px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      grid-column: 1 / -1;
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .empty-state h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .empty-state p { color: var(--text-secondary); font-size: 0.9rem; max-width: 400px; margin: 0 auto; }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      height: 200px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    thead th {
+      padding: 0.625rem 0.875rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: color var(--transition);
+      position: relative;
+    }
+    thead th:hover { color: var(--text); }
+    thead th.sorted-asc::after,
+    thead th.sorted-desc::after {
+      margin-left: 0.25rem;
+      font-size: 0.7rem;
+    }
+    thead th.sorted-asc::after { content: ' ▲'; }
+    thead th.sorted-desc::after { content: ' ▼'; }
+    tbody td {
+      padding: 0.75rem 0.875rem;
+      border-bottom: 1px solid var(--border-light);
+      font-variant-numeric: tabular-nums;
+      transition: background var(--transition);
+    }
+    tbody tr:hover td { background: #fafbfc; }
+    tbody tr:first-child td { font-weight: 600; }
+
+    /* WER color coding in table */
+    .wer-excellent { color: var(--green); }
+    .wer-good { color: #15803d; }
+    .wer-fair { color: var(--orange); }
+    .wer-poor { color: var(--red); }
+
+    /* Rank badge */
+    .rank {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      margin-right: 0.5rem;
+      flex-shrink: 0;
+    }
+    .rank-1 { background: #fef3c7; color: #92400e; }
+    .rank-2 { background: #e5e7eb; color: #4b5563; }
+    .rank-3 { background: #fed7aa; color: #9a3412; }
+    .rank-n { background: var(--bg); color: var(--text-muted); }
+
+    .provider-cell { display: flex; align-items: center; }
+
+    /* Metric cards row */
+    .metric-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 860px) {
+      .metric-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    .metric-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+    }
+    .metric-card .label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 0.375rem;
+    }
+    .metric-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .metric-card .detail {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-top: 0.125rem;
+    }
   </style>
 </head>
 <body>
-  <h1>Slovenian ASR Benchmark</h1>
-  <p class="subtitle" id="subtitle">Loading...</p>
+  <div class="container">
+    <div class="header">
+      <h1>Slovenian ASR Benchmark</h1>
+      <p class="subtitle" id="subtitle">Loading results...</p>
+    </div>
 
-  <div class="filters">
-    <label>Run: <select id="runFilter"><option value="">All runs</option></select></label>
-    <label>Provider: <select id="providerFilter"><option value="">All providers</option></select></label>
-  </div>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="runFilter">Run</label>
+        <select id="runFilter"><option value="">All runs</option></select>
+      </div>
+      <div class="filter-group">
+        <label for="providerFilter">Provider</label>
+        <select id="providerFilter"><option value="">All providers</option></select>
+      </div>
+      <button class="btn-clear" id="clearFilters">Clear filters</button>
+    </div>
 
-  <div class="grid">
-    <div class="card">
-      <h2>WER by Provider</h2>
-      <canvas id="werChart"></canvas>
-    </div>
-    <div class="card">
-      <h2>Latency by Provider</h2>
-      <canvas id="latencyChart"></canvas>
-    </div>
-    <div class="card">
-      <h2>Cost vs WER</h2>
-      <canvas id="scatterChart"></canvas>
-    </div>
-    <div class="card">
-      <h2>WER by Dialect</h2>
-      <canvas id="dialectChart"></canvas>
-    </div>
-    <div class="card full">
-      <h2>Summary</h2>
-      <table id="summaryTable">
-        <thead>
-          <tr>
-            <th data-sort="provider">Provider</th>
-            <th data-sort="meanWer">Mean WER</th>
-            <th data-sort="stdWer">Std WER</th>
-            <th data-sort="meanLatency">Latency (ms)</th>
-            <th data-sort="stdLatency">Std Latency</th>
-            <th data-sort="meanCost">Cost (USD)</th>
-            <th data-sort="count">Samples</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+    <div class="metric-cards" id="metricCards"></div>
+
+    <div class="grid" id="chartsGrid">
+      <div class="card">
+        <h2>Word Error Rate by Provider</h2>
+        <canvas id="werChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Latency by Provider</h2>
+        <canvas id="latencyChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Cost vs Accuracy</h2>
+        <canvas id="scatterChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>WER by Dialect</h2>
+        <canvas id="dialectChart"></canvas>
+      </div>
+      <div class="card full">
+        <h2>Provider Comparison</h2>
+        <div class="table-wrap">
+          <table id="summaryTable">
+            <thead>
+              <tr>
+                <th data-key="provider">Provider</th>
+                <th data-key="meanWer">Mean WER</th>
+                <th data-key="stdWer">WER Std Dev</th>
+                <th data-key="meanLatency">Avg Latency</th>
+                <th data-key="stdLatency">Latency Std Dev</th>
+                <th data-key="meanCost">Avg Cost</th>
+                <th data-key="count">Samples</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const COLORS = ['#4285f4','#ea4335','#fbbc04','#34a853','#ff6d01','#46bdc6','#7baaf7','#f07b72'];
+    const COLORS = [
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-1').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-2').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-3').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-4').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-5').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-6').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-7').trim(),
+      getComputedStyle(document.documentElement).getPropertyValue('--chart-8').trim(),
+    ];
+
+    const fmt = {
+      pct: (v, d = 1) => (v * 100).toFixed(d) + '%',
+      ms: (v) => Math.round(v).toLocaleString() + ' ms',
+      usd: (v) => '$' + v.toFixed(5),
+      num: (v) => v.toLocaleString(),
+    };
+
+    // Chart.js defaults
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = '#6b7280';
+    Chart.defaults.plugins.tooltip.backgroundColor = '#111827';
+    Chart.defaults.plugins.tooltip.titleFont = { weight: '600', size: 13 };
+    Chart.defaults.plugins.tooltip.bodyFont = { size: 12 };
+    Chart.defaults.plugins.tooltip.padding = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.displayColors = true;
+    Chart.defaults.plugins.tooltip.boxPadding = 4;
+
+    // Error bar plugin
+    const errorBarPlugin = {
+      id: 'errorBars',
+      afterDraw(chart) {
+        const dataset = chart.data.datasets[0];
+        if (!dataset?.errorBars) return;
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+        ctx.save();
+        ctx.strokeStyle = '#374151';
+        ctx.lineWidth = 1.5;
+        dataset.errorBars.forEach((err, i) => {
+          const bar = meta.data[i];
+          if (!bar) return;
+          const x = bar.x;
+          const yScale = chart.scales.y;
+          const yTop = yScale.getPixelForValue(dataset.data[i] + err);
+          const yBot = yScale.getPixelForValue(Math.max(0, dataset.data[i] - err));
+          const capW = 6;
+          ctx.beginPath();
+          ctx.moveTo(x, yTop);
+          ctx.lineTo(x, yBot);
+          ctx.moveTo(x - capW, yTop);
+          ctx.lineTo(x + capW, yTop);
+          ctx.moveTo(x - capW, yBot);
+          ctx.lineTo(x + capW, yBot);
+          ctx.stroke();
+        });
+        ctx.restore();
+      },
+    };
+    Chart.register(errorBarPlugin);
+
     let charts = {};
+    let currentSort = { key: 'meanWer', asc: true };
+    let currentStats = [];
 
     async function fetchJson(url) {
       const res = await fetch(url);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
       return res.json();
     }
 
@@ -91,7 +442,10 @@
       for (const r of runIds) {
         const opt = document.createElement('option');
         opt.value = r.run_id;
-        opt.textContent = `${r.created_at.slice(0, 16)} (${r.count} results)`;
+        const date = new Date(r.created_at).toLocaleDateString('en-GB', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+        opt.textContent = `${date} (${r.count} results)`;
         runSelect.appendChild(opt);
       }
 
@@ -104,12 +458,108 @@
       }
 
       runSelect.addEventListener('change', render);
+      provSelect.addEventListener('change', updateClearButton);
       provSelect.addEventListener('change', render);
+      runSelect.addEventListener('change', updateClearButton);
+
+      document.getElementById('clearFilters').addEventListener('click', () => {
+        runSelect.value = '';
+        provSelect.value = '';
+        updateClearButton();
+        render();
+      });
+    }
+
+    function updateClearButton() {
+      const hasFilters = document.getElementById('runFilter').value || document.getElementById('providerFilter').value;
+      document.getElementById('clearFilters').classList.toggle('visible', hasFilters);
     }
 
     function destroyCharts() {
       for (const c of Object.values(charts)) c.destroy();
       charts = {};
+    }
+
+    function werClass(wer) {
+      if (wer < 0.1) return 'wer-excellent';
+      if (wer < 0.2) return 'wer-good';
+      if (wer < 0.35) return 'wer-fair';
+      return 'wer-poor';
+    }
+
+    function rankClass(i) {
+      if (i === 0) return 'rank-1';
+      if (i === 1) return 'rank-2';
+      if (i === 2) return 'rank-3';
+      return 'rank-n';
+    }
+
+    function renderMetricCards(stats, runs) {
+      const container = document.getElementById('metricCards');
+      if (stats.length === 0) { container.innerHTML = ''; return; }
+
+      const best = stats[0];
+      const totalTranscriptions = stats.reduce((s, p) => s + p.count, 0);
+      const avgLatency = stats.reduce((s, p) => s + p.meanLatency, 0) / stats.length;
+      const avgCost = stats.reduce((s, p) => s + p.meanCost, 0) / stats.length;
+
+      container.innerHTML = `
+        <div class="metric-card">
+          <div class="label">Best Provider</div>
+          <div class="value" style="color: var(--green); font-size: 1.25rem;">${best.provider}</div>
+          <div class="detail">WER ${fmt.pct(best.meanWer)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Transcriptions</div>
+          <div class="value">${fmt.num(totalTranscriptions)}</div>
+          <div class="detail">${stats.length} providers tested</div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Avg Latency</div>
+          <div class="value">${fmt.ms(avgLatency)}</div>
+          <div class="detail">across all providers</div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Avg Cost</div>
+          <div class="value">${fmt.usd(avgCost)}</div>
+          <div class="detail">per transcription</div>
+        </div>
+      `;
+    }
+
+    function renderTable(stats) {
+      currentStats = stats;
+      const tbody = document.getElementById('tableBody');
+
+      if (stats.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No data</td></tr>';
+        return;
+      }
+
+      const sorted = [...stats].sort((a, b) => {
+        const av = a[currentSort.key], bv = b[currentSort.key];
+        if (typeof av === 'string') return currentSort.asc ? av.localeCompare(bv) : bv.localeCompare(av);
+        return currentSort.asc ? av - bv : bv - av;
+      });
+
+      tbody.innerHTML = sorted.map((s, i) => `
+        <tr>
+          <td><div class="provider-cell"><span class="rank ${rankClass(i)}">${i + 1}</span>${s.provider}</div></td>
+          <td class="${werClass(s.meanWer)}">${fmt.pct(s.meanWer)}</td>
+          <td>${fmt.pct(s.stdWer)}</td>
+          <td>${fmt.ms(s.meanLatency)}</td>
+          <td>${fmt.ms(s.stdLatency)}</td>
+          <td>${fmt.usd(s.meanCost)}</td>
+          <td>${fmt.num(s.count)}</td>
+        </tr>
+      `).join('');
+
+      document.querySelectorAll('#summaryTable th').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.key === currentSort.key) {
+          th.classList.add(currentSort.asc ? 'sorted-asc' : 'sorted-desc');
+        }
+      });
     }
 
     async function render() {
@@ -127,30 +577,90 @@
         fetchJson('/api/runs' + qs),
       ]);
 
-      document.getElementById('subtitle').textContent =
-        `${runs.length} transcriptions across ${stats.length} provider(s)`;
+      // Subtitle
+      const sub = document.getElementById('subtitle');
+      if (runs.length === 0) {
+        sub.innerHTML = 'No benchmark results yet. Run <code>npm run benchmark</code> first.';
+        document.getElementById('metricCards').innerHTML = '';
+        document.getElementById('chartsGrid').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">&#x1f399;</div>
+            <h2>No results yet</h2>
+            <p>Run the benchmark CLI to transcribe audio files, then come back here to see the results.</p>
+          </div>`;
+        return;
+      }
 
+      sub.innerHTML = `${fmt.num(runs.length)} transcriptions across <span>${stats.length} providers</span>`;
+
+      renderMetricCards(stats, runs);
       destroyCharts();
 
       const providers = stats.map(s => s.provider);
       const meanWers = stats.map(s => +(s.meanWer * 100).toFixed(2));
+      const stdWers = stats.map(s => +(s.stdWer * 100).toFixed(2));
       const meanLatencies = stats.map(s => Math.round(s.meanLatency));
+      const stdLatencies = stats.map(s => Math.round(s.stdLatency));
       const costs = stats.map(s => +s.meanCost.toFixed(5));
+      const colors = providers.map((_, i) => COLORS[i % COLORS.length]);
+      const colorsAlpha = colors.map(c => c + '33');
+
+      // Restore chart grid if it was replaced by empty state
+      const grid = document.getElementById('chartsGrid');
+      if (!document.getElementById('werChart')) {
+        grid.innerHTML = `
+          <div class="card"><h2>Word Error Rate by Provider</h2><canvas id="werChart"></canvas></div>
+          <div class="card"><h2>Latency by Provider</h2><canvas id="latencyChart"></canvas></div>
+          <div class="card"><h2>Cost vs Accuracy</h2><canvas id="scatterChart"></canvas></div>
+          <div class="card"><h2>WER by Dialect</h2><canvas id="dialectChart"></canvas></div>
+          <div class="card full"><h2>Provider Comparison</h2><div class="table-wrap"><table id="summaryTable"><thead><tr>
+            <th data-key="provider">Provider</th><th data-key="meanWer">Mean WER</th><th data-key="stdWer">WER Std Dev</th>
+            <th data-key="meanLatency">Avg Latency</th><th data-key="stdLatency">Latency Std Dev</th>
+            <th data-key="meanCost">Avg Cost</th><th data-key="count">Samples</th>
+          </tr></thead><tbody id="tableBody"></tbody></table></div></div>`;
+        bindTableSort();
+      }
 
       // WER bar chart
       charts.wer = new Chart(document.getElementById('werChart'), {
         type: 'bar',
         data: {
           labels: providers,
-          datasets: [{ label: 'WER %', data: meanWers, backgroundColor: COLORS }],
+          datasets: [{
+            label: 'WER %',
+            data: meanWers,
+            backgroundColor: colorsAlpha,
+            borderColor: colors,
+            borderWidth: 2,
+            borderRadius: 6,
+            errorBars: stdWers,
+          }],
         },
         options: {
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, title: { display: true, text: 'WER (%)' } } },
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const i = ctx.dataIndex;
+                  return `WER: ${meanWers[i]}% ± ${stdWers[i]}%`;
+                },
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'WER (%)', font: { weight: '500' } },
+              grid: { color: '#f0f0f0' },
+            },
+            x: { grid: { display: false } },
+          },
         },
       });
 
-      // Latency bar chart
+      // Latency bar chart with error bars
       charts.latency = new Chart(document.getElementById('latencyChart'), {
         type: 'bar',
         data: {
@@ -158,12 +668,34 @@
           datasets: [{
             label: 'Latency (ms)',
             data: meanLatencies,
-            backgroundColor: COLORS,
+            backgroundColor: colorsAlpha,
+            borderColor: colors,
+            borderWidth: 2,
+            borderRadius: 6,
+            errorBars: stdLatencies,
           }],
         },
         options: {
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, title: { display: true, text: 'Latency (ms)' } } },
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const i = ctx.dataIndex;
+                  return `Latency: ${fmt.num(meanLatencies[i])} ± ${fmt.num(stdLatencies[i])} ms`;
+                },
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'Latency (ms)', font: { weight: '500' } },
+              grid: { color: '#f0f0f0' },
+            },
+            x: { grid: { display: false } },
+          },
         },
       });
 
@@ -174,14 +706,32 @@
           datasets: providers.map((p, i) => ({
             label: p,
             data: [{ x: costs[i], y: meanWers[i] }],
-            backgroundColor: COLORS[i % COLORS.length],
-            pointRadius: 8,
+            backgroundColor: colors[i],
+            borderColor: colors[i],
+            pointRadius: 10,
+            pointHoverRadius: 13,
+            pointStyle: 'circle',
           })),
         },
         options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: WER ${ctx.parsed.y}%, Cost ${fmt.usd(ctx.parsed.x)}`,
+              },
+            },
+          },
           scales: {
-            x: { title: { display: true, text: 'Cost per transcription (USD)' } },
-            y: { title: { display: true, text: 'WER (%)' }, beginAtZero: true },
+            x: {
+              title: { display: true, text: 'Cost per transcription (USD)', font: { weight: '500' } },
+              grid: { color: '#f0f0f0' },
+            },
+            y: {
+              title: { display: true, text: 'WER (%)', font: { weight: '500' } },
+              beginAtZero: true,
+              grid: { color: '#f0f0f0' },
+            },
           },
         },
       });
@@ -198,50 +748,50 @@
               const entry = dialects.find(d => d.provider === p && d.dialect === dialect);
               return entry ? +(entry.meanWer * 100).toFixed(2) : 0;
             }),
-            backgroundColor: COLORS[i % COLORS.length],
+            backgroundColor: COLORS[i % COLORS.length] + '55',
+            borderColor: COLORS[i % COLORS.length],
+            borderWidth: 1.5,
+            borderRadius: 4,
           })),
         },
         options: {
-          scales: { y: { beginAtZero: true, title: { display: true, text: 'WER (%)' } } },
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%`,
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: 'WER (%)', font: { weight: '500' } },
+              grid: { color: '#f0f0f0' },
+            },
+            x: { grid: { display: false } },
+          },
         },
       });
 
-      // Summary table
-      const tbody = document.querySelector('#summaryTable tbody');
-      tbody.innerHTML = stats.map((s, i) => `
-        <tr>
-          <td${i === 0 ? ' class="best"' : ''}>${s.provider}</td>
-          <td${i === 0 ? ' class="best"' : ''}>${(s.meanWer * 100).toFixed(1)}%</td>
-          <td>${(s.stdWer * 100).toFixed(1)}%</td>
-          <td>${Math.round(s.meanLatency)}</td>
-          <td>${Math.round(s.stdLatency)}</td>
-          <td>$${s.meanCost.toFixed(5)}</td>
-          <td>${s.count}</td>
-        </tr>
-      `).join('');
+      renderTable(stats);
     }
 
-    // Table sorting
-    document.querySelector('#summaryTable thead').addEventListener('click', (e) => {
-      const th = e.target.closest('th');
-      if (!th || !th.dataset.sort) return;
-      const key = th.dataset.sort;
-      const tbody = document.querySelector('#summaryTable tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const idx = Array.from(th.parentNode.children).indexOf(th);
-      const asc = th.classList.toggle('asc');
-
-      rows.sort((a, b) => {
-        const av = a.children[idx].textContent.replace(/[$%]/g, '');
-        const bv = b.children[idx].textContent.replace(/[$%]/g, '');
-        const an = parseFloat(av), bn = parseFloat(bv);
-        if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
-        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    function bindTableSort() {
+      document.querySelector('#summaryTable thead')?.addEventListener('click', (e) => {
+        const th = e.target.closest('th');
+        if (!th?.dataset.key) return;
+        if (currentSort.key === th.dataset.key) {
+          currentSort.asc = !currentSort.asc;
+        } else {
+          currentSort.key = th.dataset.key;
+          currentSort.asc = true;
+        }
+        renderTable(currentStats);
       });
+    }
 
-      for (const row of rows) tbody.appendChild(row);
-    });
-
+    bindTableSort();
     loadFilters().then(render);
   </script>
 </body>
