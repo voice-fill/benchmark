@@ -10,25 +10,42 @@ export type { BenchmarkProvider, TranscribeResult } from './types.js';
 
 type ProviderFactory = () => BenchmarkProvider;
 
-const PROVIDER_FACTORIES: Record<string, ProviderFactory> = {
-  'openai-whisper': createOpenAIWhisperProvider,
-  'deepgram-nova3': createDeepgramProvider,
-  'assemblyai-best': createAssemblyAIProvider,
-  'soniox-stt': createSonioxProvider,
+interface ProviderEntry {
+  factory: ProviderFactory;
+  envKey: string;
+}
+
+const PROVIDER_REGISTRY: Record<string, ProviderEntry> = {
+  'openai-whisper':  { factory: createOpenAIWhisperProvider, envKey: 'OPENAI_API_KEY' },
+  'deepgram-nova3':  { factory: createDeepgramProvider,      envKey: 'DEEPGRAM_API_KEY' },
+  'assemblyai-best': { factory: createAssemblyAIProvider,    envKey: 'ASSEMBLYAI_API_KEY' },
+  'soniox-stt':      { factory: createSonioxProvider,        envKey: 'SONIOX_API_KEY' },
 };
 
 export function getProvider(name: string): BenchmarkProvider {
-  const factory = PROVIDER_FACTORIES[name];
-  if (!factory) {
-    throw new Error(`Unknown provider: ${name}. Available: ${Object.keys(PROVIDER_FACTORIES).join(', ')}`);
+  const entry = PROVIDER_REGISTRY[name];
+  if (!entry) {
+    throw new Error(`Unknown provider: ${name}. Available: ${Object.keys(PROVIDER_REGISTRY).join(', ')}`);
   }
-  return factory();
+  return entry.factory();
 }
 
 export function listProviders(): string[] {
-  return Object.keys(PROVIDER_FACTORIES);
+  return Object.keys(PROVIDER_REGISTRY);
 }
 
-export function registerProvider(name: string, factory: ProviderFactory): void {
-  PROVIDER_FACTORIES[name] = factory;
+export function getAvailableProviders(): BenchmarkProvider[] {
+  const available: BenchmarkProvider[] = [];
+  for (const [name, entry] of Object.entries(PROVIDER_REGISTRY)) {
+    if (process.env[entry.envKey]) {
+      available.push(entry.factory());
+    } else {
+      console.log(`  Skipping ${name} (no ${entry.envKey})`);
+    }
+  }
+  return available;
+}
+
+export function registerProvider(name: string, factory: ProviderFactory, envKey: string): void {
+  PROVIDER_REGISTRY[name] = { factory, envKey };
 }

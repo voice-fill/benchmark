@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { createDb } from './db.js';
-import { getProvider, listProviders } from './providers/index.js';
+import { getProvider, listProviders, getAvailableProviders } from './providers/index.js';
 import { runBenchmark, type AudioFile } from './runner.js';
 
 const DB_PATH = path.resolve('results/benchmark.db');
@@ -53,16 +53,23 @@ program
   .option('-d, --data <dir>', 'Data directory with audio + txt files', 'data')
   .option('-l, --language <code>', 'Language code', 'sl')
   .action(async (opts) => {
-    const providerNames = opts.providers
-      ? opts.providers.split(',').map((s: string) => s.trim())
-      : listProviders();
+    let providers: import('./providers/types.js').BenchmarkProvider[];
+    if (opts.providers) {
+      const names = opts.providers.split(',').map((s: string) => s.trim());
+      providers = names.map((name: string) => getProvider(name));
+    } else {
+      providers = getAvailableProviders();
+    }
 
-    console.log(`Providers: ${providerNames.join(', ')}`);
+    if (providers.length === 0) {
+      console.error('No providers available. Set API keys in .env file.');
+      process.exit(1);
+    }
+
+    console.log(`Providers: ${providers.map(p => p.name).join(', ')}`);
     console.log(`Data dir: ${opts.data}`);
     console.log(`Language: ${opts.language}`);
     console.log();
-
-    const providers = providerNames.map((name: string) => getProvider(name));
     const files = await loadAudioFiles(opts.data);
 
     if (files.length === 0) {

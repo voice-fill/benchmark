@@ -61,9 +61,10 @@ export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
       insertRun(config.db, row);
       results.push(row);
 
-      console.log(
-        `  ${provider.name} × ${file.path} → WER: ${(werResult.wer * 100).toFixed(1)}%, ${latencyMs}ms`,
-      );
+      console.log(`\n  ${provider.name} × ${file.path}`);
+      console.log(`  Reference:  ${normalizedRef}`);
+      console.log(`  AI output:  ${normalizedHyp}`);
+      console.log(`  WER: ${(werResult.wer * 100).toFixed(1)}% | Latency: ${latencyMs}ms | Cost: ${costUsd != null ? '$' + costUsd.toFixed(5) : 'n/a'}`);
     }
   }
 

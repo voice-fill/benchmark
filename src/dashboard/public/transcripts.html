@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcripts — Slovenian ASR Benchmark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --border-light: #f0f1f3;
+      --text: #111827;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --green: #059669;
+      --green-light: #ecfdf5;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --orange: #d97706;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.06);
+      --transition: 200ms ease;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Navigation */
+    .nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      height: 3.25rem;
+    }
+    .nav-brand {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+    .nav-links { display: flex; gap: 0.25rem; }
+    .nav-link {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.825rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition);
+    }
+    .nav-link:hover { color: var(--text); background: var(--bg); }
+    .nav-link.active { color: var(--accent); background: var(--accent-light); }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 4rem;
+    }
+
+    /* Page header */
+    .page-header {
+      margin-bottom: 1.5rem;
+    }
+    .page-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .page-header .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      align-items: stretch;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 240px;
+      position: relative;
+    }
+    .search-box svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 0.6rem 0.75rem 0.6rem 2.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .search-box input::placeholder { color: var(--text-muted); }
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .search-box .shortcut {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1rem 0.375rem;
+      pointer-events: none;
+    }
+    .filter-select {
+      padding: 0.6rem 2rem 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .filter-select:has(option:checked:not([value=""])) {
+      border-color: var(--accent);
+      background-color: var(--accent-light);
+    }
+    .sort-select {
+      padding: 0.6rem 2rem 0.6rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.6rem center;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    .btn-clear {
+      padding: 0.6rem 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-family: inherit;
+      font-weight: 500;
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+      display: none;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    .btn-clear:hover { background: var(--bg); color: var(--text); }
+    .btn-clear.visible { display: inline-flex; }
+
+    /* Active filter chips */
+    .active-filters {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .active-filters:empty { display: none; }
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.625rem;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .filter-chip:hover { background: #dde3ff; }
+    .filter-chip svg { width: 12px; height: 12px; }
+
+    /* Results count */
+    .results-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .results-count {
+      font-size: 0.825rem;
+      color: var(--text-secondary);
+    }
+    .results-count strong { color: var(--text); font-weight: 600; }
+    .view-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .view-toggle button {
+      padding: 0.375rem 0.625rem;
+      border: none;
+      background: var(--surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      font-weight: 500;
+      transition: all var(--transition);
+    }
+    .view-toggle button:not(:last-child) { border-right: 1px solid var(--border); }
+    .view-toggle button.active { background: var(--accent-light); color: var(--accent); }
+    .view-toggle button:hover:not(.active) { background: var(--bg); }
+
+    /* Comparison cards */
+    .comparison-file {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: box-shadow var(--transition);
+    }
+    .comparison-file:hover { box-shadow: var(--shadow-md); }
+    .comparison-file-header {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border-light);
+      background: #fafbfc;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    .comparison-file-header:hover { background: #f5f6f8; }
+    .collapse-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+      flex-shrink: 0;
+    }
+    .comparison-file.collapsed .collapse-icon { transform: rotate(-90deg); }
+    .comparison-file.collapsed .comparison-body { display: none; }
+    .comparison-file-header .filename {
+      font-weight: 600;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      text-transform: capitalize;
+    }
+    .tag-dialect { background: var(--accent-light); color: var(--accent); }
+    .tag-condition { background: #faf5ff; color: #7c3aed; }
+    .tag-wer {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+    }
+    .tag-wer-good { background: var(--green-light); color: var(--green); }
+    .tag-wer-fair { background: #fffbeb; color: var(--orange); }
+    .tag-wer-poor { background: var(--red-light); color: var(--red); }
+    .provider-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .comparison-ref {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border-light);
+      background: #fdfdfe;
+    }
+    .comparison-ref .label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.375rem;
+    }
+    .comparison-ref .text {
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .comparison-provider {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border-light);
+      transition: background var(--transition);
+    }
+    .comparison-provider:last-child { border-bottom: none; }
+    .comparison-provider:hover { background: #fafbfc; }
+    .comparison-provider-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .comparison-provider-header .provider-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    .badge {
+      font-size: 0.675rem;
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: 999px;
+    }
+    .badge-wer { background: var(--green-light); color: var(--green); }
+    .badge-wer.fair { background: #fffbeb; color: var(--orange); }
+    .badge-wer.poor { background: var(--red-light); color: var(--red); }
+    .badge-latency { background: #f0f9ff; color: #0369a1; }
+    .badge-cost { background: #faf5ff; color: #7c3aed; }
+    .diff-text {
+      font-size: 0.875rem;
+      line-height: 1.8;
+    }
+    .diff-ok { color: var(--text); }
+    .diff-sub {
+      background: #fef2f2;
+      color: var(--red);
+      text-decoration: line-through;
+      border-radius: 3px;
+      padding: 0.05rem 0.2rem;
+    }
+    .diff-sub-new {
+      background: var(--green-light);
+      color: var(--green);
+      border-radius: 3px;
+      padding: 0.05rem 0.2rem;
+      font-weight: 500;
+    }
+    .diff-ins {
+      background: var(--green-light);
+      color: var(--green);
+      border-radius: 3px;
+      padding: 0.05rem 0.2rem;
+      font-style: italic;
+    }
+    .diff-del {
+      background: #fef2f2;
+      color: var(--red);
+      text-decoration: line-through;
+      border-radius: 3px;
+      padding: 0.05rem 0.2rem;
+    }
+
+    /* Diff legend */
+    .diff-legend {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
+    }
+    .diff-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.775rem;
+      color: var(--text-secondary);
+    }
+    .diff-legend-item .sample {
+      padding: 0.05rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .empty-state h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* Table view */
+    .table-view { display: none; }
+    .table-view.active { display: block; }
+    .cards-view.active { display: block; }
+    .cards-view { display: none; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-light);
+    }
+    thead th {
+      padding: 0.625rem 0.875rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color var(--transition);
+    }
+    thead th:hover { color: var(--text); }
+    thead th.sorted-asc::after { content: ' \25B2'; font-size: 0.65rem; }
+    thead th.sorted-desc::after { content: ' \25BC'; font-size: 0.65rem; }
+    tbody td {
+      padding: 0.625rem 0.875rem;
+      border-bottom: 1px solid var(--border-light);
+      font-variant-numeric: tabular-nums;
+      vertical-align: top;
+    }
+    tbody tr:hover td { background: #fafbfc; }
+    .wer-excellent { color: var(--green); font-weight: 600; }
+    .wer-good { color: #15803d; }
+    .wer-fair { color: var(--orange); }
+    .wer-poor { color: var(--red); }
+    .truncate {
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 768px) {
+      .toolbar { flex-direction: column; }
+      .search-box { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/">ASR Benchmark</a>
+      <div class="nav-links">
+        <a class="nav-link" href="/">Dashboard</a>
+        <a class="nav-link active" href="/transcripts.html">Transcripts</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Transcript Comparisons</h1>
+      <p class="subtitle" id="subtitle">Loading...</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search files, transcriptions, dialects...">
+        <span class="shortcut">/</span>
+      </div>
+      <select class="filter-select" id="providerFilter">
+        <option value="">All providers</option>
+      </select>
+      <select class="filter-select" id="dialectFilter">
+        <option value="">All dialects</option>
+      </select>
+      <select class="filter-select" id="runFilter">
+        <option value="">All runs</option>
+      </select>
+      <select class="sort-select" id="sortSelect">
+        <option value="file-asc">File A-Z</option>
+        <option value="file-desc">File Z-A</option>
+        <option value="wer-asc">Best WER first</option>
+        <option value="wer-desc">Worst WER first</option>
+        <option value="date-desc">Newest first</option>
+        <option value="date-asc">Oldest first</option>
+      </select>
+      <button class="btn-clear" id="clearFilters">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+        Clear
+      </button>
+    </div>
+
+    <div class="active-filters" id="activeFilters"></div>
+
+    <div class="results-bar" id="resultsBar" style="display:none;">
+      <span class="results-count" id="resultsCount"></span>
+      <div class="view-toggle">
+        <button class="active" data-view="cards" title="Card view">Cards</button>
+        <button data-view="table" title="Table view">Table</button>
+      </div>
+    </div>
+
+    <div class="diff-legend" id="diffLegend" style="display:none;">
+      <div class="diff-legend-item">
+        <span class="sample diff-ok">correct</span> Matches reference
+      </div>
+      <div class="diff-legend-item">
+        <span class="sample diff-sub">ref</span><span class="sample diff-sub-new">hyp</span> Substitution
+      </div>
+      <div class="diff-legend-item">
+        <span class="sample diff-ins">extra</span> Insertion (extra word)
+      </div>
+      <div class="diff-legend-item">
+        <span class="sample diff-del">missing</span> Deletion (missing word)
+      </div>
+    </div>
+
+    <div class="cards-view active" id="cardsView"></div>
+
+    <div class="table-view" id="tableView">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="file">File</th>
+              <th data-key="provider">Provider</th>
+              <th data-key="dialect">Dialect</th>
+              <th data-key="wer">WER</th>
+              <th data-key="latency">Latency</th>
+              <th data-key="cost">Cost</th>
+              <th data-key="hypothesis">Transcription</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fmt = {
+      pct: (v, d = 1) => (v * 100).toFixed(d) + '%',
+      ms: (v) => Math.round(v).toLocaleString() + ' ms',
+      usd: (v) => '$' + v.toFixed(5),
+    };
+
+    let allRuns = [];
+    let currentView = 'cards';
+    let tableSort = { key: 'file', asc: true };
+
+    // --- Word diff ---
+    function wordDiff(refText, hypText) {
+      const ref = refText.split(/\s+/).filter(Boolean);
+      const hyp = hypText.split(/\s+/).filter(Boolean);
+      const m = ref.length, n = hyp.length;
+
+      const dp = Array.from({ length: m + 1 }, () => new Uint16Array(n + 1));
+      for (let i = 0; i <= m; i++) dp[i][0] = i;
+      for (let j = 0; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          if (ref[i - 1] === hyp[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1];
+          } else {
+            dp[i][j] = 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+      }
+
+      const ops = [];
+      let i = m, j = n;
+      while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && ref[i - 1] === hyp[j - 1]) {
+          ops.push({ type: 'ok', ref: ref[i - 1] });
+          i--; j--;
+        } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
+          ops.push({ type: 'sub', ref: ref[i - 1], hyp: hyp[j - 1] });
+          i--; j--;
+        } else if (j > 0 && dp[i][j] === dp[i][j - 1] + 1) {
+          ops.push({ type: 'ins', hyp: hyp[j - 1] });
+          j--;
+        } else {
+          ops.push({ type: 'del', ref: ref[i - 1] });
+          i--;
+        }
+      }
+      return ops.reverse();
+    }
+
+    function renderDiffHtml(ops) {
+      return ops.map(op => {
+        switch (op.type) {
+          case 'ok':  return `<span class="diff-ok">${esc(op.ref)}</span>`;
+          case 'sub': return `<span class="diff-sub">${esc(op.ref)}</span><span class="diff-sub-new">${esc(op.hyp)}</span>`;
+          case 'ins': return `<span class="diff-ins">${esc(op.hyp)}</span>`;
+          case 'del': return `<span class="diff-del">${esc(op.ref)}</span>`;
+        }
+      }).join(' ');
+    }
+
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // --- Helpers ---
+    function werBadgeClass(wer) {
+      if (wer < 0.1) return 'badge-wer';
+      if (wer < 0.3) return 'badge-wer fair';
+      return 'badge-wer poor';
+    }
+
+    function werTagClass(wer) {
+      if (wer < 0.1) return 'tag-wer tag-wer-good';
+      if (wer < 0.3) return 'tag-wer tag-wer-fair';
+      return 'tag-wer tag-wer-poor';
+    }
+
+    function werClass(wer) {
+      if (wer < 0.1) return 'wer-excellent';
+      if (wer < 0.2) return 'wer-good';
+      if (wer < 0.35) return 'wer-fair';
+      return 'wer-poor';
+    }
+
+    function shortFile(path) {
+      return path.split('/').pop();
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      return res.json();
+    }
+
+    // --- Filtering ---
+    function getFilters() {
+      return {
+        search: document.getElementById('searchInput').value.trim().toLowerCase(),
+        provider: document.getElementById('providerFilter').value,
+        dialect: document.getElementById('dialectFilter').value,
+        runId: document.getElementById('runFilter').value,
+        sort: document.getElementById('sortSelect').value,
+      };
+    }
+
+    function filterRuns(runs) {
+      const f = getFilters();
+      return runs.filter(r => {
+        if (f.provider && r.provider !== f.provider) return false;
+        if (f.dialect && (r.dialect ?? '') !== f.dialect) return false;
+        if (f.runId && r.run_id !== f.runId) return false;
+        if (f.search) {
+          const hay = [
+            r.audio_file, r.provider, r.dialect ?? '',
+            r.condition ?? '', r.reference_text, r.hypothesis_text,
+          ].join(' ').toLowerCase();
+          const terms = f.search.split(/\s+/);
+          if (!terms.every(t => hay.includes(t))) return false;
+        }
+        return true;
+      });
+    }
+
+    function groupByFile(runs) {
+      const map = new Map();
+      for (const r of runs) {
+        if (!map.has(r.audio_file)) map.set(r.audio_file, []);
+        map.get(r.audio_file).push(r);
+      }
+      return map;
+    }
+
+    function sortGroups(groups) {
+      const f = getFilters();
+      const entries = [...groups.entries()];
+      switch (f.sort) {
+        case 'file-asc':
+          return entries.sort((a, b) => shortFile(a[0]).localeCompare(shortFile(b[0])));
+        case 'file-desc':
+          return entries.sort((a, b) => shortFile(b[0]).localeCompare(shortFile(a[0])));
+        case 'wer-asc':
+          return entries.sort((a, b) => Math.min(...a[1].map(r => r.wer)) - Math.min(...b[1].map(r => r.wer)));
+        case 'wer-desc':
+          return entries.sort((a, b) => Math.max(...b[1].map(r => r.wer)) - Math.max(...a[1].map(r => r.wer)));
+        case 'date-desc':
+          return entries.sort((a, b) => b[1][0].created_at.localeCompare(a[1][0].created_at));
+        case 'date-asc':
+          return entries.sort((a, b) => a[1][0].created_at.localeCompare(b[1][0].created_at));
+        default:
+          return entries;
+      }
+    }
+
+    // --- Rendering ---
+    function renderActiveFilters() {
+      const f = getFilters();
+      const container = document.getElementById('activeFilters');
+      const chips = [];
+      if (f.provider) chips.push({ label: f.provider, clear: () => { document.getElementById('providerFilter').value = ''; render(); } });
+      if (f.dialect) chips.push({ label: f.dialect, clear: () => { document.getElementById('dialectFilter').value = ''; render(); } });
+      if (f.runId) chips.push({ label: 'Run: ' + f.runId.slice(0, 8), clear: () => { document.getElementById('runFilter').value = ''; render(); } });
+      if (f.search) chips.push({ label: '"' + f.search + '"', clear: () => { document.getElementById('searchInput').value = ''; render(); } });
+
+      container.innerHTML = chips.map((c, i) => `
+        <button class="filter-chip" data-idx="${i}">
+          ${esc(c.label)}
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      `).join('');
+
+      container.querySelectorAll('.filter-chip').forEach(el => {
+        el.addEventListener('click', () => chips[+el.dataset.idx].clear());
+      });
+
+      const clearBtn = document.getElementById('clearFilters');
+      clearBtn.classList.toggle('visible', chips.length > 0);
+    }
+
+    function renderCards(sorted) {
+      const container = document.getElementById('cardsView');
+      if (sorted.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h2>No transcripts found</h2>
+            <p>Try adjusting your search or filters.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = sorted.map(([file, fileRuns]) => {
+        const first = fileRuns[0];
+        const name = shortFile(file);
+        const avgWer = fileRuns.reduce((s, r) => s + r.wer, 0) / fileRuns.length;
+
+        const tags = [];
+        if (first.dialect) tags.push(`<span class="tag tag-dialect">${esc(first.dialect)}</span>`);
+        if (first.condition) tags.push(`<span class="tag tag-condition">${esc(first.condition)}</span>`);
+        tags.push(`<span class="tag ${werTagClass(avgWer)}">avg WER ${fmt.pct(avgWer)}</span>`);
+
+        const providers = fileRuns.map(r => {
+          const ops = wordDiff(r.reference_text, r.hypothesis_text);
+          const werPct = (r.wer * 100).toFixed(1);
+          const latency = Math.round(r.latency_ms);
+          const cost = r.cost_usd != null ? fmt.usd(r.cost_usd) : 'n/a';
+
+          return `
+            <div class="comparison-provider">
+              <div class="comparison-provider-header">
+                <span class="provider-name">${esc(r.provider)}</span>
+                <span class="badge ${werBadgeClass(r.wer)}">WER ${werPct}%</span>
+                <span class="badge badge-latency">${fmt.ms(latency)}</span>
+                <span class="badge badge-cost">${cost}</span>
+              </div>
+              <div class="diff-text">${renderDiffHtml(ops)}</div>
+            </div>`;
+        }).join('');
+
+        return `
+          <div class="comparison-file" data-file="${esc(file)}">
+            <div class="comparison-file-header">
+              <svg class="collapse-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+              <span class="filename">${esc(name)}</span>
+              ${tags.join('')}
+              <span class="provider-count">${fileRuns.length} provider${fileRuns.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="comparison-body">
+              <div class="comparison-ref">
+                <div class="label">Ground Truth (your transcription)</div>
+                <div class="text">${esc(first.reference_text)}</div>
+              </div>
+              ${providers}
+            </div>
+          </div>`;
+      }).join('');
+
+      container.querySelectorAll('.comparison-file-header').forEach(el => {
+        el.addEventListener('click', () => {
+          el.closest('.comparison-file').classList.toggle('collapsed');
+        });
+      });
+    }
+
+    function renderTable(filtered) {
+      const tbody = document.getElementById('tableBody');
+
+      const sorted = [...filtered].sort((a, b) => {
+        let av, bv;
+        switch (tableSort.key) {
+          case 'file':     av = shortFile(a.audio_file); bv = shortFile(b.audio_file); break;
+          case 'provider': av = a.provider; bv = b.provider; break;
+          case 'dialect':  av = a.dialect ?? ''; bv = b.dialect ?? ''; break;
+          case 'wer':      return tableSort.asc ? a.wer - b.wer : b.wer - a.wer;
+          case 'latency':  return tableSort.asc ? a.latency_ms - b.latency_ms : b.latency_ms - a.latency_ms;
+          case 'cost':     return tableSort.asc ? (a.cost_usd ?? 0) - (b.cost_usd ?? 0) : (b.cost_usd ?? 0) - (a.cost_usd ?? 0);
+          case 'hypothesis': av = a.hypothesis_text; bv = b.hypothesis_text; break;
+          default: return 0;
+        }
+        if (av !== undefined && bv !== undefined) {
+          return tableSort.asc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+        }
+        return 0;
+      });
+
+      if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No transcripts found</td></tr>';
+      } else {
+        tbody.innerHTML = sorted.map(r => `
+          <tr>
+            <td>${esc(shortFile(r.audio_file))}</td>
+            <td>${esc(r.provider)}</td>
+            <td>${esc(r.dialect ?? '-')}</td>
+            <td class="${werClass(r.wer)}">${fmt.pct(r.wer)}</td>
+            <td>${fmt.ms(r.latency_ms)}</td>
+            <td>${r.cost_usd != null ? fmt.usd(r.cost_usd) : '-'}</td>
+            <td><div class="truncate" title="${esc(r.hypothesis_text)}">${esc(r.hypothesis_text)}</div></td>
+          </tr>
+        `).join('');
+      }
+
+      document.querySelectorAll('#tableView th').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.key === tableSort.key) {
+          th.classList.add(tableSort.asc ? 'sorted-asc' : 'sorted-desc');
+        }
+      });
+    }
+
+    function render() {
+      const filtered = filterRuns(allRuns);
+      const grouped = groupByFile(filtered);
+      const sorted = sortGroups(grouped);
+      const fileCount = sorted.length;
+      const providerCount = new Set(filtered.map(r => r.provider)).size;
+
+      document.getElementById('subtitle').textContent =
+        `Compare ground truth against ${providerCount} provider${providerCount !== 1 ? 's' : ''} across ${new Set(allRuns.map(r => r.audio_file)).size} audio files`;
+
+      const resultsBar = document.getElementById('resultsBar');
+      const legend = document.getElementById('diffLegend');
+      if (filtered.length === 0 && allRuns.length === 0) {
+        resultsBar.style.display = 'none';
+        legend.style.display = 'none';
+      } else {
+        resultsBar.style.display = '';
+        legend.style.display = currentView === 'cards' ? '' : 'none';
+      }
+
+      document.getElementById('resultsCount').innerHTML =
+        `<strong>${fileCount}</strong> file${fileCount !== 1 ? 's' : ''}, <strong>${filtered.length}</strong> transcription${filtered.length !== 1 ? 's' : ''}`;
+
+      renderActiveFilters();
+      renderCards(sorted);
+      renderTable(filtered);
+    }
+
+    // --- Init ---
+    async function init() {
+      const [runs, runIds] = await Promise.all([
+        fetchJson('/api/runs'),
+        fetchJson('/api/runs/list'),
+      ]);
+      allRuns = runs;
+
+      // Populate provider filter
+      const providers = [...new Set(runs.map(r => r.provider))].sort();
+      const provSelect = document.getElementById('providerFilter');
+      for (const p of providers) {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        provSelect.appendChild(opt);
+      }
+
+      // Populate dialect filter
+      const dialects = [...new Set(runs.map(r => r.dialect).filter(Boolean))].sort();
+      const dialSelect = document.getElementById('dialectFilter');
+      for (const d of dialects) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        dialSelect.appendChild(opt);
+      }
+
+      // Populate run filter
+      const runSelect = document.getElementById('runFilter');
+      for (const r of runIds) {
+        const opt = document.createElement('option');
+        opt.value = r.run_id;
+        const date = new Date(r.created_at).toLocaleDateString('en-GB', {
+          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+        });
+        opt.textContent = `${date} (${r.count} results)`;
+        runSelect.appendChild(opt);
+      }
+
+      // Bind events
+      let debounce;
+      document.getElementById('searchInput').addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(render, 150);
+      });
+      document.getElementById('providerFilter').addEventListener('change', render);
+      document.getElementById('dialectFilter').addEventListener('change', render);
+      document.getElementById('runFilter').addEventListener('change', render);
+      document.getElementById('sortSelect').addEventListener('change', render);
+
+      document.getElementById('clearFilters').addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('providerFilter').value = '';
+        document.getElementById('dialectFilter').value = '';
+        document.getElementById('runFilter').value = '';
+        render();
+      });
+
+      // View toggle
+      document.querySelectorAll('.view-toggle button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentView = btn.dataset.view;
+          document.getElementById('cardsView').classList.toggle('active', currentView === 'cards');
+          document.getElementById('tableView').classList.toggle('active', currentView === 'table');
+          document.getElementById('diffLegend').style.display = currentView === 'cards' ? '' : 'none';
+        });
+      });
+
+      // Table sort
+      document.querySelectorAll('#tableView th').forEach(th => {
+        th.addEventListener('click', () => {
+          if (tableSort.key === th.dataset.key) {
+            tableSort.asc = !tableSort.asc;
+          } else {
+            tableSort.key = th.dataset.key;
+            tableSort.asc = true;
+          }
+          renderTable(filterRuns(allRuns));
+        });
+      });
+
+      // Keyboard shortcut: / to focus search
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+          e.preventDefault();
+          document.getElementById('searchInput').focus();
+        }
+        if (e.key === 'Escape') {
+          document.getElementById('searchInput').blur();
+        }
+      });
+
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
