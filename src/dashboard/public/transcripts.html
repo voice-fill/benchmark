@@ -596,7 +596,9 @@
               <th data-key="provider">Provider</th>
               <th data-key="dialect">Dialect</th>
               <th data-key="wer">WER</th>
+              <th data-key="cer">CER</th>
               <th data-key="latency">Latency</th>
+              <th data-key="rtf">RTF</th>
               <th data-key="cost">Cost</th>
               <th data-key="hypothesis">Transcription</th>
             </tr>
@@ -814,16 +816,21 @@
         const providers = fileRuns.map(r => {
           const ops = wordDiff(r.reference_text, r.hypothesis_text);
           const werPct = (r.wer * 100).toFixed(1);
+          const cerPct = ((r.cer ?? 0) * 100).toFixed(1);
           const latency = Math.round(r.latency_ms);
           const cost = r.cost_usd != null ? fmt.usd(r.cost_usd) : 'n/a';
+          const rtf = r.rtf != null ? r.rtf.toFixed(2) + 'x' : '';
+          const errors = `S:${r.substitutions ?? 0} I:${r.insertions ?? 0} D:${r.deletions ?? 0}`;
 
           return `
             <div class="comparison-provider">
               <div class="comparison-provider-header">
                 <span class="provider-name">${esc(r.provider)}</span>
                 <span class="badge ${werBadgeClass(r.wer)}">WER ${werPct}%</span>
-                <span class="badge badge-latency">${fmt.ms(latency)}</span>
+                <span class="badge ${werBadgeClass(r.cer ?? 0)}">CER ${cerPct}%</span>
+                <span class="badge badge-latency">${fmt.ms(latency)}${rtf ? ' · ' + rtf : ''}</span>
                 <span class="badge badge-cost">${cost}</span>
+                <span class="badge" style="background:#f5f5f5;color:#666;">${errors}</span>
               </div>
               <div class="diff-text">${renderDiffHtml(ops)}</div>
             </div>`;
@@ -866,7 +873,9 @@
           case 'provider': av = a.provider; bv = b.provider; break;
           case 'dialect':  av = a.dialect ?? ''; bv = b.dialect ?? ''; break;
           case 'wer':      return tableSort.asc ? a.wer - b.wer : b.wer - a.wer;
+          case 'cer':      return tableSort.asc ? (a.cer ?? 0) - (b.cer ?? 0) : (b.cer ?? 0) - (a.cer ?? 0);
           case 'latency':  return tableSort.asc ? a.latency_ms - b.latency_ms : b.latency_ms - a.latency_ms;
+          case 'rtf':      return tableSort.asc ? (a.rtf ?? 0) - (b.rtf ?? 0) : (b.rtf ?? 0) - (a.rtf ?? 0);
           case 'cost':     return tableSort.asc ? (a.cost_usd ?? 0) - (b.cost_usd ?? 0) : (b.cost_usd ?? 0) - (a.cost_usd ?? 0);
           case 'hypothesis': av = a.hypothesis_text; bv = b.hypothesis_text; break;
           default: return 0;
@@ -878,7 +887,7 @@
       });
 
       if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No transcripts found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem;">No transcripts found</td></tr>';
       } else {
         tbody.innerHTML = sorted.map(r => `
           <tr>
@@ -886,7 +895,9 @@
             <td>${esc(r.provider)}</td>
             <td>${esc(r.dialect ?? '-')}</td>
             <td class="${werClass(r.wer)}">${fmt.pct(r.wer)}</td>
+            <td class="${werClass(r.cer ?? 0)}">${fmt.pct(r.cer ?? 0)}</td>
             <td>${fmt.ms(r.latency_ms)}</td>
+            <td>${r.rtf != null ? r.rtf.toFixed(2) + 'x' : '-'}</td>
             <td>${r.cost_usd != null ? fmt.usd(r.cost_usd) : '-'}</td>
             <td><div class="truncate" title="${esc(r.hypothesis_text)}">${esc(r.hypothesis_text)}</div></td>
           </tr>

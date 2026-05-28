@@ -11,7 +11,12 @@ export interface RunRow {
   reference_text: string;
   hypothesis_text: string;
   wer: number;
+  cer: number;
+  substitutions: number;
+  insertions: number;
+  deletions: number;
   latency_ms: number;
+  rtf: number | null;
   duration_s: number | null;
   cost_usd: number | null;
   language_detected: string | null;
@@ -38,12 +43,25 @@ export function createDb(path: string): BenchmarkDb {
       reference_text TEXT NOT NULL,
       hypothesis_text TEXT NOT NULL,
       wer REAL NOT NULL,
+      cer REAL NOT NULL DEFAULT 0,
+      substitutions INTEGER NOT NULL DEFAULT 0,
+      insertions INTEGER NOT NULL DEFAULT 0,
+      deletions INTEGER NOT NULL DEFAULT 0,
       latency_ms INTEGER NOT NULL,
+      rtf REAL,
       duration_s REAL,
       cost_usd REAL,
       language_detected TEXT
     )
   `);
+
+  const columns = db.pragma('table_info(runs)') as { name: string }[];
+  const colNames = new Set(columns.map(c => c.name));
+  if (!colNames.has('cer')) db.exec('ALTER TABLE runs ADD COLUMN cer REAL NOT NULL DEFAULT 0');
+  if (!colNames.has('substitutions')) db.exec('ALTER TABLE runs ADD COLUMN substitutions INTEGER NOT NULL DEFAULT 0');
+  if (!colNames.has('insertions')) db.exec('ALTER TABLE runs ADD COLUMN insertions INTEGER NOT NULL DEFAULT 0');
+  if (!colNames.has('deletions')) db.exec('ALTER TABLE runs ADD COLUMN deletions INTEGER NOT NULL DEFAULT 0');
+  if (!colNames.has('rtf')) db.exec('ALTER TABLE runs ADD COLUMN rtf REAL');
 
   return {
     db,
@@ -56,12 +74,12 @@ export function createDb(path: string): BenchmarkDb {
 const INSERT_SQL = `
   INSERT INTO runs (
     run_id, created_at, provider, audio_file, dialect, condition,
-    reference_text, hypothesis_text, wer, latency_ms, duration_s,
-    cost_usd, language_detected
+    reference_text, hypothesis_text, wer, cer, substitutions, insertions, deletions,
+    latency_ms, rtf, duration_s, cost_usd, language_detected
   ) VALUES (
     @run_id, @created_at, @provider, @audio_file, @dialect, @condition,
-    @reference_text, @hypothesis_text, @wer, @latency_ms, @duration_s,
-    @cost_usd, @language_detected
+    @reference_text, @hypothesis_text, @wer, @cer, @substitutions, @insertions, @deletions,
+    @latency_ms, @rtf, @duration_s, @cost_usd, @language_detected
   )
 `;
 

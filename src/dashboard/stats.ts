@@ -5,9 +5,15 @@ export interface ProviderStats {
   provider: string;
   meanWer: number;
   stdWer: number;
+  meanCer: number;
+  stdCer: number;
   meanLatency: number;
   stdLatency: number;
+  meanRtf: number;
   meanCost: number;
+  totalSubstitutions: number;
+  totalInsertions: number;
+  totalDeletions: number;
   count: number;
 }
 
@@ -43,16 +49,24 @@ export function getProviderStats(db: BenchmarkDb, filter?: QueryFilter): Provide
   const stats: ProviderStats[] = [];
   for (const [provider, provRuns] of byProvider) {
     const wers = provRuns.map(r => r.wer);
+    const cers = provRuns.map(r => r.cer);
     const latencies = provRuns.map(r => r.latency_ms);
+    const rtfs = provRuns.filter(r => r.rtf != null).map(r => r.rtf!);
     const costs = provRuns.filter(r => r.cost_usd != null).map(r => r.cost_usd!);
 
     stats.push({
       provider,
       meanWer: mean(wers),
       stdWer: stddev(wers),
+      meanCer: mean(cers),
+      stdCer: stddev(cers),
       meanLatency: mean(latencies),
       stdLatency: stddev(latencies),
+      meanRtf: rtfs.length > 0 ? mean(rtfs) : 0,
       meanCost: costs.length > 0 ? mean(costs) : 0,
+      totalSubstitutions: provRuns.reduce((s, r) => s + r.substitutions, 0),
+      totalInsertions: provRuns.reduce((s, r) => s + r.insertions, 0),
+      totalDeletions: provRuns.reduce((s, r) => s + r.deletions, 0),
       count: provRuns.length,
     });
   }

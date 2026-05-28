@@ -363,6 +363,10 @@
         <select id="providerFilter"><option value="">All providers</option></select>
       </div>
       <button class="btn-clear" id="clearFilters">Clear filters</button>
+      <div style="margin-left:auto; display:flex; gap:0.5rem;">
+        <button class="btn-clear visible" id="exportCsv" style="display:inline-flex;">Export CSV</button>
+        <button class="btn-clear visible" id="exportJson" style="display:inline-flex;">Export JSON</button>
+      </div>
     </div>
 
     <div class="metric-cards" id="metricCards"></div>
@@ -373,8 +377,24 @@
         <canvas id="werChart"></canvas>
       </div>
       <div class="card">
+        <h2>Character Error Rate by Provider</h2>
+        <canvas id="cerChart"></canvas>
+      </div>
+      <div class="card">
         <h2>Latency by Provider</h2>
         <canvas id="latencyChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Real-Time Factor</h2>
+        <canvas id="rtfChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>Error Breakdown (S / I / D)</h2>
+        <canvas id="errorChart"></canvas>
+      </div>
+      <div class="card">
+        <h2>CER vs WER</h2>
+        <canvas id="cerWerChart"></canvas>
       </div>
       <div class="card">
         <h2>Cost vs Accuracy</h2>
@@ -392,10 +412,13 @@
               <tr>
                 <th data-key="provider">Provider</th>
                 <th data-key="meanWer">Mean WER</th>
-                <th data-key="stdWer">WER Std Dev</th>
+                <th data-key="meanCer">Mean CER</th>
                 <th data-key="meanLatency">Avg Latency</th>
-                <th data-key="stdLatency">Latency Std Dev</th>
+                <th data-key="meanRtf">RTF</th>
                 <th data-key="meanCost">Avg Cost</th>
+                <th data-key="totalSubstitutions">S</th>
+                <th data-key="totalInsertions">I</th>
+                <th data-key="totalDeletions">D</th>
                 <th data-key="count">Samples</th>
               </tr>
             </thead>
@@ -550,28 +573,29 @@
       const best = stats[0];
       const totalTranscriptions = stats.reduce((s, p) => s + p.count, 0);
       const avgLatency = stats.reduce((s, p) => s + p.meanLatency, 0) / stats.length;
-      const avgCost = stats.reduce((s, p) => s + p.meanCost, 0) / stats.length;
+      const bestCer = [...stats].sort((a, b) => a.meanCer - b.meanCer)[0];
+      const bestRtf = [...stats].sort((a, b) => a.meanRtf - b.meanRtf)[0];
 
       container.innerHTML = `
         <div class="metric-card">
-          <div class="label">Best Provider</div>
+          <div class="label">Best WER</div>
           <div class="value" style="color: var(--green); font-size: 1.25rem;">${best.provider}</div>
-          <div class="detail">WER ${fmt.pct(best.meanWer)}</div>
+          <div class="detail">WER ${fmt.pct(best.meanWer)} | CER ${fmt.pct(best.meanCer)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Best CER</div>
+          <div class="value" style="color: var(--accent); font-size: 1.25rem;">${bestCer.provider}</div>
+          <div class="detail">CER ${fmt.pct(bestCer.meanCer)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="label">Fastest (RTF)</div>
+          <div class="value" style="font-size: 1.25rem;">${bestRtf.provider}</div>
+          <div class="detail">RTF ${bestRtf.meanRtf.toFixed(2)}x</div>
         </div>
         <div class="metric-card">
           <div class="label">Transcriptions</div>
           <div class="value">${fmt.num(totalTranscriptions)}</div>
-          <div class="detail">${stats.length} providers tested</div>
-        </div>
-        <div class="metric-card">
-          <div class="label">Avg Latency</div>
-          <div class="value">${fmt.ms(avgLatency)}</div>
-          <div class="detail">across all providers</div>
-        </div>
-        <div class="metric-card">
-          <div class="label">Avg Cost</div>
-          <div class="value">${fmt.usd(avgCost)}</div>
-          <div class="detail">per transcription</div>
+          <div class="detail">${stats.length} providers, ${fmt.ms(avgLatency)} avg</div>
         </div>
       `;
     }
@@ -595,10 +619,13 @@
         <tr>
           <td><div class="provider-cell"><span class="rank ${rankClass(i)}">${i + 1}</span>${s.provider}</div></td>
           <td class="${werClass(s.meanWer)}">${fmt.pct(s.meanWer)}</td>
-          <td>${fmt.pct(s.stdWer)}</td>
+          <td class="${werClass(s.meanCer)}">${fmt.pct(s.meanCer)}</td>
           <td>${fmt.ms(s.meanLatency)}</td>
-          <td>${fmt.ms(s.stdLatency)}</td>
+          <td>${s.meanRtf.toFixed(2)}x</td>
           <td>${fmt.usd(s.meanCost)}</td>
+          <td>${fmt.num(s.totalSubstitutions)}</td>
+          <td>${fmt.num(s.totalInsertions)}</td>
+          <td>${fmt.num(s.totalDeletions)}</td>
           <td>${fmt.num(s.count)}</td>
         </tr>
       `).join('');
@@ -610,6 +637,8 @@
         }
       });
     }
+
+    let lastRuns = [];
 
     async function render() {
       const runId = document.getElementById('runFilter').value;
@@ -626,7 +655,8 @@
         fetchJson('/api/runs' + qs),
       ]);
 
-      // Subtitle
+      lastRuns = runs;
+
       const sub = document.getElementById('subtitle');
       if (runs.length === 0) {
         sub.innerHTML = 'No benchmark results yet. Run <code>npm run benchmark</code> first.';
@@ -648,24 +678,33 @@
       const providers = stats.map(s => s.provider);
       const meanWers = stats.map(s => +(s.meanWer * 100).toFixed(2));
       const stdWers = stats.map(s => +(s.stdWer * 100).toFixed(2));
+      const meanCers = stats.map(s => +(s.meanCer * 100).toFixed(2));
+      const stdCers = stats.map(s => +(s.stdCer * 100).toFixed(2));
       const meanLatencies = stats.map(s => Math.round(s.meanLatency));
       const stdLatencies = stats.map(s => Math.round(s.stdLatency));
+      const meanRtfs = stats.map(s => +s.meanRtf.toFixed(3));
       const costs = stats.map(s => +s.meanCost.toFixed(5));
+      const subs = stats.map(s => s.totalSubstitutions);
+      const ins = stats.map(s => s.totalInsertions);
+      const dels = stats.map(s => s.totalDeletions);
       const colors = providers.map((_, i) => COLORS[i % COLORS.length]);
       const colorsAlpha = colors.map(c => c + '33');
 
-      // Restore chart grid if it was replaced by empty state
       const grid = document.getElementById('chartsGrid');
       if (!document.getElementById('werChart')) {
         grid.innerHTML = `
           <div class="card"><h2>Word Error Rate by Provider</h2><canvas id="werChart"></canvas></div>
+          <div class="card"><h2>Character Error Rate by Provider</h2><canvas id="cerChart"></canvas></div>
           <div class="card"><h2>Latency by Provider</h2><canvas id="latencyChart"></canvas></div>
+          <div class="card"><h2>Real-Time Factor</h2><canvas id="rtfChart"></canvas></div>
+          <div class="card"><h2>Error Breakdown (S / I / D)</h2><canvas id="errorChart"></canvas></div>
+          <div class="card"><h2>CER vs WER</h2><canvas id="cerWerChart"></canvas></div>
           <div class="card"><h2>Cost vs Accuracy</h2><canvas id="scatterChart"></canvas></div>
           <div class="card"><h2>WER by Dialect</h2><canvas id="dialectChart"></canvas></div>
           <div class="card full"><h2>Provider Comparison</h2><div class="table-wrap"><table id="summaryTable"><thead><tr>
-            <th data-key="provider">Provider</th><th data-key="meanWer">Mean WER</th><th data-key="stdWer">WER Std Dev</th>
-            <th data-key="meanLatency">Avg Latency</th><th data-key="stdLatency">Latency Std Dev</th>
-            <th data-key="meanCost">Avg Cost</th><th data-key="count">Samples</th>
+            <th data-key="provider">Provider</th><th data-key="meanWer">Mean WER</th><th data-key="meanCer">Mean CER</th>
+            <th data-key="meanLatency">Avg Latency</th><th data-key="meanRtf">RTF</th>
+            <th data-key="meanCost">Avg Cost</th><th data-key="totalSubstitutions">S</th><th data-key="totalInsertions">I</th><th data-key="totalDeletions">D</th><th data-key="count">Samples</th>
           </tr></thead><tbody id="tableBody"></tbody></table></div></div>`;
         bindTableSort();
       }
@@ -689,27 +728,44 @@
           responsive: true,
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => {
-                  const i = ctx.dataIndex;
-                  return `WER: ${meanWers[i]}% ± ${stdWers[i]}%`;
-                },
-              },
-            },
+            tooltip: { callbacks: { label: (ctx) => `WER: ${meanWers[ctx.dataIndex]}% ± ${stdWers[ctx.dataIndex]}%` } },
           },
           scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'WER (%)', font: { weight: '500' } },
-              grid: { color: '#f0f0f0' },
-            },
+            y: { beginAtZero: true, title: { display: true, text: 'WER (%)', font: { weight: '500' } }, grid: { color: '#f0f0f0' } },
             x: { grid: { display: false } },
           },
         },
       });
 
-      // Latency bar chart with error bars
+      // CER bar chart
+      charts.cer = new Chart(document.getElementById('cerChart'), {
+        type: 'bar',
+        data: {
+          labels: providers,
+          datasets: [{
+            label: 'CER %',
+            data: meanCers,
+            backgroundColor: colorsAlpha,
+            borderColor: colors,
+            borderWidth: 2,
+            borderRadius: 6,
+            errorBars: stdCers,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => `CER: ${meanCers[ctx.dataIndex]}% ± ${stdCers[ctx.dataIndex]}%` } },
+          },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'CER (%)', font: { weight: '500' } }, grid: { color: '#f0f0f0' } },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+
+      // Latency bar chart
       charts.latency = new Chart(document.getElementById('latencyChart'), {
         type: 'bar',
         data: {
@@ -728,22 +784,91 @@
           responsive: true,
           plugins: {
             legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => {
-                  const i = ctx.dataIndex;
-                  return `Latency: ${fmt.num(meanLatencies[i])} ± ${fmt.num(stdLatencies[i])} ms`;
-                },
-              },
-            },
+            tooltip: { callbacks: { label: (ctx) => `Latency: ${fmt.num(meanLatencies[ctx.dataIndex])} ± ${fmt.num(stdLatencies[ctx.dataIndex])} ms` } },
+          },
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Latency (ms)', font: { weight: '500' } }, grid: { color: '#f0f0f0' } },
+            x: { grid: { display: false } },
+          },
+        },
+      });
+
+      // RTF bar chart
+      charts.rtf = new Chart(document.getElementById('rtfChart'), {
+        type: 'bar',
+        data: {
+          labels: providers,
+          datasets: [{
+            label: 'RTF',
+            data: meanRtfs,
+            backgroundColor: colorsAlpha,
+            borderColor: colors,
+            borderWidth: 2,
+            borderRadius: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => `RTF: ${meanRtfs[ctx.dataIndex]}x (< 1 = faster than real-time)` } },
+            annotation: undefined,
           },
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: true, text: 'Latency (ms)', font: { weight: '500' } },
+              title: { display: true, text: 'Real-Time Factor', font: { weight: '500' } },
               grid: { color: '#f0f0f0' },
             },
             x: { grid: { display: false } },
+          },
+        },
+      });
+
+      // Error breakdown stacked bar
+      charts.error = new Chart(document.getElementById('errorChart'), {
+        type: 'bar',
+        data: {
+          labels: providers,
+          datasets: [
+            { label: 'Substitutions', data: subs, backgroundColor: '#ef444455', borderColor: '#ef4444', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Insertions', data: ins, backgroundColor: '#22c55e55', borderColor: '#22c55e', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Deletions', data: dels, backgroundColor: '#f59e0b55', borderColor: '#f59e0b', borderWidth: 1.5, borderRadius: 4 },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}` } },
+          },
+          scales: {
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Error count', font: { weight: '500' } }, grid: { color: '#f0f0f0' } },
+            x: { stacked: true, grid: { display: false } },
+          },
+        },
+      });
+
+      // CER vs WER scatter
+      charts.cerWer = new Chart(document.getElementById('cerWerChart'), {
+        type: 'scatter',
+        data: {
+          datasets: providers.map((p, i) => ({
+            label: p,
+            data: [{ x: meanWers[i], y: meanCers[i] }],
+            backgroundColor: colors[i],
+            borderColor: colors[i],
+            pointRadius: 10,
+            pointHoverRadius: 13,
+          })),
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: WER ${ctx.parsed.x}%, CER ${ctx.parsed.y}%` } },
+          },
+          scales: {
+            x: { title: { display: true, text: 'WER (%)', font: { weight: '500' } }, grid: { color: '#f0f0f0' }, beginAtZero: true },
+            y: { title: { display: true, text: 'CER (%)', font: { weight: '500' } }, grid: { color: '#f0f0f0' }, beginAtZero: true },
           },
         },
       });
@@ -759,28 +884,16 @@
             borderColor: colors[i],
             pointRadius: 10,
             pointHoverRadius: 13,
-            pointStyle: 'circle',
           })),
         },
         options: {
           responsive: true,
           plugins: {
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: WER ${ctx.parsed.y}%, Cost ${fmt.usd(ctx.parsed.x)}`,
-              },
-            },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: WER ${ctx.parsed.y}%, Cost ${fmt.usd(ctx.parsed.x)}` } },
           },
           scales: {
-            x: {
-              title: { display: true, text: 'Cost per transcription (USD)', font: { weight: '500' } },
-              grid: { color: '#f0f0f0' },
-            },
-            y: {
-              title: { display: true, text: 'WER (%)', font: { weight: '500' } },
-              beginAtZero: true,
-              grid: { color: '#f0f0f0' },
-            },
+            x: { title: { display: true, text: 'Cost per transcription (USD)', font: { weight: '500' } }, grid: { color: '#f0f0f0' } },
+            y: { title: { display: true, text: 'WER (%)', font: { weight: '500' } }, beginAtZero: true, grid: { color: '#f0f0f0' } },
           },
         },
       });
@@ -806,18 +919,10 @@
         options: {
           responsive: true,
           plugins: {
-            tooltip: {
-              callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%`,
-              },
-            },
+            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%` } },
           },
           scales: {
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: 'WER (%)', font: { weight: '500' } },
-              grid: { color: '#f0f0f0' },
-            },
+            y: { beginAtZero: true, title: { display: true, text: 'WER (%)', font: { weight: '500' } }, grid: { color: '#f0f0f0' } },
             x: { grid: { display: false } },
           },
         },
@@ -825,6 +930,37 @@
 
       renderTable(stats);
     }
+
+    function downloadFile(content, filename, mime) {
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCsv() {
+      if (lastRuns.length === 0) return;
+      const headers = ['provider','audio_file','dialect','condition','wer','cer','substitutions','insertions','deletions','latency_ms','rtf','duration_s','cost_usd','reference_text','hypothesis_text'];
+      const rows = lastRuns.map(r => headers.map(h => {
+        const v = r[h];
+        if (v == null) return '';
+        if (typeof v === 'string' && (v.includes(',') || v.includes('"') || v.includes('\n')))
+          return '"' + v.replace(/"/g, '""') + '"';
+        return v;
+      }).join(','));
+      downloadFile([headers.join(','), ...rows].join('\n'), 'benchmark-results.csv', 'text/csv');
+    }
+
+    function exportJson() {
+      if (lastRuns.length === 0) return;
+      downloadFile(JSON.stringify(lastRuns, null, 2), 'benchmark-results.json', 'application/json');
+    }
+
+    document.getElementById('exportCsv').addEventListener('click', exportCsv);
+    document.getElementById('exportJson').addEventListener('click', exportJson);
 
     function bindTableSort() {
       document.querySelector('#summaryTable thead')?.addEventListener('click', (e) => {

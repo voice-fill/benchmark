@@ -30,7 +30,12 @@ describe('database', () => {
       reference_text: 'pozdravljen svet',
       hypothesis_text: 'pozdravljen svat',
       wer: 0.5,
+      cer: 0.0625,
+      substitutions: 1,
+      insertions: 0,
+      deletions: 0,
       latency_ms: 1200,
+      rtf: 0.34,
       duration_s: 3.5,
       cost_usd: 0.00035,
       language_detected: 'sl',
@@ -41,6 +46,9 @@ describe('database', () => {
     expect(runs).toHaveLength(1);
     expect(runs[0].provider).toBe('openai-whisper');
     expect(runs[0].wer).toBe(0.5);
+    expect(runs[0].cer).toBe(0.0625);
+    expect(runs[0].substitutions).toBe(1);
+    expect(runs[0].rtf).toBe(0.34);
     expect(runs[0].run_id).toBe('test-run-1');
   });
 
@@ -54,7 +62,12 @@ describe('database', () => {
       reference_text: 'ref',
       hypothesis_text: 'hyp',
       wer: 0.1,
+      cer: 0.05,
+      substitutions: 1,
+      insertions: 0,
+      deletions: 0,
       latency_ms: 500,
+      rtf: 0.25,
       duration_s: 2.0,
       cost_usd: 0.0002,
       language_detected: 'sl',
@@ -78,7 +91,12 @@ describe('database', () => {
       reference_text: 'ref',
       hypothesis_text: 'hyp',
       wer: 0.1,
+      cer: 0.05,
+      substitutions: 1,
+      insertions: 0,
+      deletions: 0,
       latency_ms: 500,
+      rtf: 0.25,
       duration_s: 2.0,
       cost_usd: 0.0002,
       language_detected: 'sl',
@@ -103,7 +121,12 @@ describe('database', () => {
       reference_text: 'ref',
       hypothesis_text: 'hyp',
       wer: 0.0,
+      cer: 0.0,
+      substitutions: 0,
+      insertions: 0,
+      deletions: 0,
       latency_ms: 500,
+      rtf: null,
       duration_s: null,
       cost_usd: null,
       language_detected: null,
@@ -113,5 +136,6 @@ describe('database', () => {
     const runs = queryRuns(db);
     expect(runs[0].dialect).toBeNull();
     expect(runs[0].duration_s).toBeNull();
+    expect(runs[0].rtf).toBeNull();
   });
 });

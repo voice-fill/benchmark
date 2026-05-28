@@ -5,6 +5,7 @@ import type { BenchmarkDb, RunRow } from './db.js';
 import { insertRun } from './db.js';
 import { normalizeText } from './metrics/normalize.js';
 import { computeWer } from './metrics/wer.js';
+import { computeCer } from './metrics/cer.js';
 import { calculateCost } from './metrics/cost.js';
 
 export interface AudioFile {
@@ -38,9 +39,11 @@ export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
       const normalizedRef = normalizeText(file.reference);
       const normalizedHyp = normalizeText(transcription.text);
       const werResult = computeWer(normalizedRef, normalizedHyp);
+      const cerResult = computeCer(normalizedRef, normalizedHyp);
 
       const durationS = transcription.durationInSeconds ?? null;
       const costUsd = durationS != null ? calculateCost(provider.name, durationS) ?? null : null;
+      const rtf = durationS != null && durationS > 0 ? latencyMs / (durationS * 1000) : null;
 
       const row: RunResult = {
         run_id: runId,
@@ -52,7 +55,12 @@ export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
         reference_text: normalizedRef,
         hypothesis_text: normalizedHyp,
         wer: werResult.wer,
+        cer: cerResult.cer,
+        substitutions: werResult.substitutions,
+        insertions: werResult.insertions,
+        deletions: werResult.deletions,
         latency_ms: latencyMs,
+        rtf,
         duration_s: durationS,
         cost_usd: costUsd,
         language_detected: null,
@@ -64,7 +72,8 @@ export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
       console.log(`\n  ${provider.name} × ${file.path}`);
       console.log(`  Reference:  ${normalizedRef}`);
       console.log(`  AI output:  ${normalizedHyp}`);
-      console.log(`  WER: ${(werResult.wer * 100).toFixed(1)}% | Latency: ${latencyMs}ms | Cost: ${costUsd != null ? '$' + costUsd.toFixed(5) : 'n/a'}`);
+      console.log(`  WER: ${(werResult.wer * 100).toFixed(1)}% | CER: ${(cerResult.cer * 100).toFixed(1)}% | S:${werResult.substitutions} I:${werResult.insertions} D:${werResult.deletions}`);
+      console.log(`  Latency: ${latencyMs}ms | RTF: ${rtf != null ? rtf.toFixed(2) : 'n/a'} | Cost: ${costUsd != null ? '$' + costUsd.toFixed(5) : 'n/a'}`);
     }
   }
 
