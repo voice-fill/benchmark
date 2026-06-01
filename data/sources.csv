@@ -1,0 +1,7 @@
+file,condition,dialect,url,time_range
+dialect/dolenjski_naglas.mp3,dialect,dolenjski,,full
+dialect/test04-primorska.mp3,dialect,primorska,https://www.youtube.com/watch?v=UXkgYD_IcXI,full
+dialect/test05-ljubljana.mp3,dialect,ljubljana,https://www.youtube.com/watch?v=3hG9GrhQEn4,0-38
+dialect/test06-stajerska.mp3,dialect,stajerska,https://www.youtube.com/watch?v=O7aEEb1Q0dc,full
+noisy/test01-crosstalk.mp3,noisy,,https://www.youtube.com/watch?v=f4OMemMVZNM,0-5
+noisy/test02-street.mp3,noisy,,https://www.youtube.com/watch?v=W5FDpR4tlMA,0-30
