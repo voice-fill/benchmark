@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import type { BenchmarkProvider } from './providers/types.js';
 import type { BenchmarkDb, RunRow } from './db.js';
-import { insertRun } from './db.js';
+import { createBenchmarkRun, insertMeasurement } from './db.js';
 import { normalizeText } from './metrics/normalize.js';
 import { computeWer } from './metrics/wer.js';
 import { computeCer } from './metrics/cer.js';
@@ -26,7 +26,10 @@ export type RunResult = Omit<RunRow, 'id'>;
 
 export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
   const runId = randomUUID();
+  const createdAt = new Date().toISOString();
   const results: RunResult[] = [];
+
+  createBenchmarkRun(config.db, { id: runId, created_at: createdAt, language: config.language });
 
   for (const file of config.files) {
     const audio = await readFile(file.path);
@@ -47,7 +50,7 @@ export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
 
       const row: RunResult = {
         run_id: runId,
-        created_at: new Date().toISOString(),
+        created_at: createdAt,
         provider: provider.name,
         audio_file: file.path,
         dialect: file.dialect,
@@ -66,7 +69,7 @@ export async function runBenchmark(config: RunConfig): Promise<RunResult[]> {
         language_detected: null,
       };
 
-      insertRun(config.db, row);
+      insertMeasurement(config.db, row);
       results.push(row);
 
       console.log(`\n  ${provider.name} × ${file.path}`);

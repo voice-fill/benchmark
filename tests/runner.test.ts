@@ -20,13 +20,17 @@ function createMockDb(): BenchmarkDb {
   };
 }
 
-const insertRun = vi.hoisted(() => vi.fn());
+const createBenchmarkRun = vi.hoisted(() => vi.fn());
+const insertMeasurement = vi.hoisted(() => vi.fn());
 vi.mock('../src/db.js', async (importOriginal) => {
   const mod = await importOriginal<typeof import('../src/db.js')>();
   return {
     ...mod,
-    insertRun: (...args: unknown[]) => {
-      insertRun(...args);
+    createBenchmarkRun: (...args: unknown[]) => {
+      createBenchmarkRun(...args);
+    },
+    insertMeasurement: (...args: unknown[]) => {
+      insertMeasurement(...args);
     },
   };
 });
@@ -62,7 +66,8 @@ describe('runBenchmark', () => {
     expect(results[0].wer).toBeGreaterThan(0);
     expect(results[0].latency_ms).toBeGreaterThanOrEqual(0);
     expect(provider.transcribe).toHaveBeenCalledOnce();
-    expect(insertRun).toHaveBeenCalledOnce();
+    expect(createBenchmarkRun).toHaveBeenCalledOnce();
+    expect(insertMeasurement).toHaveBeenCalledOnce();
   });
 
   it('runs multiple files through multiple providers', async () => {
@@ -84,7 +89,8 @@ describe('runBenchmark', () => {
     });
 
     expect(results).toHaveLength(4);
-    expect(insertRun).toHaveBeenCalledTimes(4);
+    expect(createBenchmarkRun).toHaveBeenCalledOnce();
+    expect(insertMeasurement).toHaveBeenCalledTimes(4);
   });
 
   it('computes WER using normalized texts', async () => {

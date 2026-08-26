@@ -82,6 +82,23 @@ The dashboard serves a Chart.js frontend from an Express server, reading from th
 | `GET /api/runs` | Raw run data (filter with `?provider=X&runId=Y`) |
 | `GET /api/runs/list` | List of benchmark run IDs |
 
+## Database
+
+Results live in `results/benchmark.db` (SQLite). The schema is normalized with foreign keys:
+
+| Table | Grain | Key columns |
+|-------|-------|-------------|
+| `benchmark_runs` | one CLI invocation | `id` (UUID) PK, `created_at`, `language` |
+| `providers` | one ASR provider | `id` PK, `name` UNIQUE, `cost_per_minute_usd` |
+| `audio_files` | one recording | `id` PK, `path` UNIQUE, `condition`, `dialect`, `reference_text`, `duration_s` |
+| `measurements` | one provider x one file within one run | `id` PK, FKs to all three tables, `UNIQUE (run_id, provider_id, audio_file_id)` |
+
+`measurements.run_id` cascades on delete, so removing a run removes its measurements. The `runs` **view** joins the four tables back into a flat row and is what `/api/runs`, the stats module and the dashboard read.
+
+The full DDL is in [`docs/schema.sql`](docs/schema.sql) and the entity diagram in [`docs/er-diagram.svg`](docs/er-diagram.svg).
+
+Opening the `.db` file in DBeaver (or any client with an ER view) now draws the three relationships automatically.
+
 ## Metrics
 
 - **WER** -- Word Error Rate via word-level Levenshtein distance

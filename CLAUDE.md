@@ -50,7 +50,9 @@ Supported audio formats: mp3, wav, m4a, flac, ogg, webm.
 
 - **Providers** use Vercel AI SDK (`experimental_transcribe`) — not raw HTTP. Each provider wraps a transcription model from its `@ai-sdk/*` package.
 - **Metrics**: WER and CER computed via edit-distance DP. Text is normalized (lowercase, strip punctuation, collapse whitespace) before comparison.
-- **DB**: SQLite via `better-sqlite3` at `results/benchmark.db`. Each run gets a UUID; rows store per-file per-provider results.
+- **DB**: SQLite via `better-sqlite3` at `results/benchmark.db`, normalized into four tables with foreign keys: `benchmark_runs` (one per CLI invocation, UUID id), `providers`, `audio_files` (path, condition, dialect, reference text, duration), and `measurements` (one per run x provider x file, `UNIQUE (run_id, provider_id, audio_file_id)`). `PRAGMA foreign_keys = ON`; deleting a run cascades to its measurements.
+- **`runs` view**: a `CREATE VIEW` that joins all four tables back into the old flat row shape. Stats, the API and the dashboard frontend read only this view, so they never join by hand. Write through `createBenchmarkRun()` + `insertMeasurement()` in `src/db.ts` - the latter upserts the provider and audio file, then inserts the measurement in one transaction.
+- **Legacy migration**: `src/migrations/legacy-runs.ts` detects a pre-normalization flat `runs` *table*, copies its rows into the new tables and drops it. It runs automatically from `createDb()` and is a no-op afterwards.
 - **Dashboard**: Express server serving Chart.js frontend, reads from the same SQLite DB.
 
 ## Data Conventions
