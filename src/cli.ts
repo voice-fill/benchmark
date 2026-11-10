@@ -5,6 +5,7 @@ import path from 'node:path';
 import { createDb } from './db.js';
 import { getProvider, listProviders, getAvailableProviders } from './providers/index.js';
 import { runBenchmark, type AudioFile } from './runner.js';
+import { classifyAudioPath } from './classify-audio-path.js';
 
 const DB_PATH = path.resolve('results/benchmark.db');
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.wav', '.m4a', '.flac', '.ogg', '.webm']);
@@ -27,13 +28,7 @@ async function loadAudioFiles(dataDir: string): Promise<AudioFile[]> {
       continue;
     }
 
-    const dir = path.basename(path.dirname(audioPath));
-    const condition = ['clean', 'noisy', 'dialect'].includes(dir) ? dir : null;
-
-    const baseName = path.basename(audioPath, ext);
-    const dialectMatch = baseName.match(/-([a-z]+)$/);
-    const dialect = dialectMatch ? dialectMatch[1] : null;
-
+    const { condition, dialect } = classifyAudioPath(audioPath);
     files.push({ path: audioPath, reference, dialect, condition });
   }
 
