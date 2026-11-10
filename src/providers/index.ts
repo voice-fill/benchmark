@@ -4,6 +4,9 @@ import {
   createDeepgramProvider,
   createAssemblyAIProvider,
   createSonioxProvider,
+  createOpenAIGpt4oTranscribeProvider,
+  createElevenLabsScribeProvider,
+  createGroqWhisperProvider,
 } from './voicefill.js';
 
 export type { BenchmarkProvider, TranscribeResult } from './types.js';
@@ -20,6 +23,9 @@ const PROVIDER_REGISTRY: Record<string, ProviderEntry> = {
   'deepgram-nova3':  { factory: createDeepgramProvider,      envKey: 'DEEPGRAM_API_KEY' },
   'assemblyai-best': { factory: createAssemblyAIProvider,    envKey: 'ASSEMBLYAI_API_KEY' },
   'soniox-stt':      { factory: createSonioxProvider,        envKey: 'SONIOX_API_KEY' },
+  'openai-gpt4o-transcribe': { factory: createOpenAIGpt4oTranscribeProvider, envKey: 'OPENAI_API_KEY' },
+  'elevenlabs-scribe-v2':    { factory: createElevenLabsScribeProvider,      envKey: 'ELEVENLABS_API_KEY' },
+  'groq-whisper-large-v3':   { factory: createGroqWhisperProvider,           envKey: 'GROQ_API_KEY' },
 };
 
 export function getProvider(name: string): BenchmarkProvider {

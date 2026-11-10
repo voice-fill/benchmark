@@ -1,6 +1,8 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createDeepgram } from '@ai-sdk/deepgram';
 import { createAssemblyAI } from '@ai-sdk/assemblyai';
+import { createElevenLabs } from '@ai-sdk/elevenlabs';
+import { createGroq } from '@ai-sdk/groq';
 import { createSoniox } from '@soniox/vercel-ai-sdk-provider';
 import type { TranscriptionModel, JSONValue } from 'ai';
 import { experimental_transcribe } from 'ai';
@@ -37,6 +39,33 @@ export function createOpenAIWhisperProvider(): BenchmarkProvider {
     'openai-whisper',
     () => openai.transcription('whisper-1'),
     (language) => language ? { openai: { language } } : undefined,
+  );
+}
+
+export function createOpenAIGpt4oTranscribeProvider(): BenchmarkProvider {
+  const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+  return makeProvider(
+    'openai-gpt4o-transcribe',
+    () => openai.transcription('gpt-4o-transcribe'),
+    (language) => language ? { openai: { language } } : undefined,
+  );
+}
+
+export function createElevenLabsScribeProvider(): BenchmarkProvider {
+  const elevenlabs = createElevenLabs({ apiKey: process.env.ELEVENLABS_API_KEY! });
+  return makeProvider(
+    'elevenlabs-scribe-v2',
+    () => elevenlabs.transcription('scribe_v2'),
+    (language) => language ? { elevenlabs: { languageCode: language } } : undefined,
+  );
+}
+
+export function createGroqWhisperProvider(): BenchmarkProvider {
+  const groq = createGroq({ apiKey: process.env.GROQ_API_KEY! });
+  return makeProvider(
+    'groq-whisper-large-v3',
+    () => groq.transcription('whisper-large-v3'),
+    (language) => language ? { groq: { language } } : undefined,
   );
 }
 
