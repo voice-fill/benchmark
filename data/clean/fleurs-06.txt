@@ -1,0 +1,1 @@
+Povratni tokovi so tokovi, ki se vračajo od valov, ki se lomijo ob obali, pogosto na grebenih ali čim podobnim.

@@ -5,3 +5,68 @@ dialect/test05-ljubljana.mp3,dialect,ljubljana,https://www.youtube.com/watch?v=3
 dialect/test06-stajerska.mp3,dialect,stajerska,https://www.youtube.com/watch?v=O7aEEb1Q0dc,full
 noisy/test01-crosstalk.mp3,noisy,,https://www.youtube.com/watch?v=f4OMemMVZNM,0-5
 noisy/test02-street.mp3,noisy,,https://www.youtube.com/watch?v=W5FDpR4tlMA,0-30
+dialect/rog-p0005-notranjska.mp3,dialect,notranjska,http://hdl.handle.net/11356/2073,65.33-183.91
+dialect/rog-p0009-posavska.mp3,dialect,posavska,http://hdl.handle.net/11356/2073,64.12-177.98
+dialect/rog-p0011-prlekija.mp3,dialect,prlekija,http://hdl.handle.net/11356/2073,63.11-181.33
+dialect/rog-p0016-istra.mp3,dialect,istra,http://hdl.handle.net/11356/2073,64.75-184.00
+dialect/rog-p0021-goriska.mp3,dialect,goriska,http://hdl.handle.net/11356/2073,61.27-178.95
+dialect/rog-p0022-dolenjska.mp3,dialect,dolenjska,http://hdl.handle.net/11356/2073,65.38-181.68
+dialect/rog-p0025-koroska.mp3,dialect,koroska,http://hdl.handle.net/11356/2073,60.81-180.46
+clean/fleurs-01.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-02.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-03.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-04.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-05.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-06.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-07.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-08.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-09.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-10.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-11.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-12.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-13.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-14.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-15.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-16.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-17.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-18.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-19.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-20.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-21.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-22.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-23.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-24.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-25.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-26.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-27.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-28.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+clean/fleurs-29.mp3,clean,,https://huggingface.co/datasets/google/fleurs (sl_si test),full
+noisy/fleurs-01-wind.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-02-rain.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-03-footsteps.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-04-engine.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-05-birds.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-06-fire.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-07-wind.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-08-rain.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-09-footsteps.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-10-engine.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-11-birds.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-12-fire.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-13-wind.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-14-rain.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-15-footsteps.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-16-engine.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-17-birds.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-18-fire.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-19-wind.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-20-rain.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-21-footsteps.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-22-engine.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-23-birds.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-24-fire.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-25-wind.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-26-rain.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-27-footsteps.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-28-engine.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
+noisy/fleurs-29-birds.mp3,noisy,,https://huggingface.co/datasets/google/fleurs (sl_si test) + ESC-50 noise at 5 dB SNR,full
